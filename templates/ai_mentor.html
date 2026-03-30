@@ -20,6 +20,7 @@
         <a href="/scenario"     class="nav-item"><span class="nav-icon">🎮</span> Scenarios</a>
         <a href="/learning"     class="nav-item"><span class="nav-icon">📚</span> Learning Path</a>
         <a href="/invest"       class="nav-item"><span class="nav-icon">📈</span> Invest</a>
+        <a href="/timeline"     class="nav-item"><span class="nav-icon">TL</span> Timeline</a>
         <a href="/mentor"       class="nav-item active"><span class="nav-icon">🤖</span> AI Mentor</a>
         <a href="/leaderboard"  class="nav-item"><span class="nav-icon">🏅</span> Leaderboard</a>
         <a href="/achievements" class="nav-item"><span class="nav-icon">🏆</span> Achievements</a>
@@ -46,7 +47,7 @@
                 <div class="mentor-avatar">🤖</div>
                 <div class="mentor-info">
                     <strong>FinBot — AI Mentor</strong>
-                    <span class="mentor-status" id="mentor-status">● Connecting to Ollama…</span>
+                    <span class="mentor-status" id="mentor-status">● Connecting to Groq…</span>
                 </div>
             </div>
 
@@ -85,6 +86,7 @@
                 <a href="/learning"     class="resource-link">→ Learning Path</a>
                 <a href="/scenario"     class="resource-link">→ Practice Scenarios</a>
                 <a href="/invest"       class="resource-link">→ Investment Simulator</a>
+                <a href="/timeline"     class="resource-link">-> Life Timeline Simulator</a>
                 <a href="/achievements" class="resource-link">→ Achievements</a>
             </div>
         </div>
@@ -95,9 +97,9 @@
 <script>
 // ════════════════════════════════════════════════════════════════
 //  FinLiteracy — AI Mentor Chat
-//  • Streams tokens from Ollama via /mentor/chat/stream (SSE)
+//  • Streams tokens from server via /mentor/chat/stream (SSE)
 //  • Falls back to /mentor/chat (POST) if streaming fails
-//  • Live Ollama status badge via /mentor/status
+//  • Live Groq status badge via /mentor/status
 //  • Full markdown renderer (bold, italic, lists, code)
 //  • Conversation history kept for context
 // ════════════════════════════════════════════════════════════════
@@ -106,6 +108,7 @@ const USERNAME     = {{ user.username | tojson }};
 const STREAM_API   = '/mentor/chat/stream';
 const CHAT_API     = '/mentor/chat';
 const STATUS_API   = '/mentor/status';
+const USE_STREAM   = false;
 
 const messagesEl = document.getElementById('chat-messages');
 const inputEl    = document.getElementById('chat-input');
@@ -200,16 +203,16 @@ function setBusy(busy) {
     scrollBottom();
 }
 
-// ── Fetch live Ollama status on load ──────────────────────────────
-async function checkOllamaStatus() {
+// ── Fetch live Groq status on load ──────────────────────────────
+async function checkGroqStatus() {
     try {
         const r = await fetch(STATUS_API);
         const d = await r.json();
         if (d.online) {
-            const model = d.active_model || 'llama3';
+            const model = d.model || 'llama3-8b-8192';
             setStatus('online', `● Online · ${model}`);
         } else {
-            setStatus('offline', `● Ollama offline — using keyword fallback`);
+            setStatus('offline', `● Groq key missing — using local fallback`);
         }
     } catch {
         setStatus('offline', '● Cannot reach server');
@@ -267,7 +270,7 @@ async function sendMessageStreaming(text) {
                 if (payload === '[DONE]') {
                     bubble.innerHTML = md(accumulated);
                     setBusy(false);
-                    const model = statusEl.textContent.includes('·') ? statusEl.textContent.split('·')[1].trim() : 'Ollama';
+                    const model = statusEl.textContent.includes('·') ? statusEl.textContent.split('·')[1].trim() : 'Groq';
                     setStatus('online', `● Online · ${model}`);
                     scrollBottom();
                     return;
@@ -294,7 +297,7 @@ async function sendMessageStreaming(text) {
     }
 
     setBusy(false);
-    checkOllamaStatus();
+    checkGroqStatus();
     scrollBottom();
 }
 
@@ -315,12 +318,12 @@ async function sendMessageFallback(text) {
     } catch (err) {
         console.error('[AI Mentor] Fallback error:', err);
         messagesEl.appendChild(createBubble(
-            '⚠️ Ollama is not responding. Make sure `ollama serve` is running and a model is pulled (e.g. `ollama pull llama3`). Using keyword fallback for now.',
+            '⚠️ Groq is not responding right now. Check `GROQ_API_KEY`, optional `GROQ_MODEL`, and network access.',
             'bot'
         ));
     } finally {
         setBusy(false);
-        checkOllamaStatus();
+        checkGroqStatus();
         scrollBottom();
     }
 }
@@ -334,7 +337,11 @@ async function sendMessage() {
     inputEl.value = '';
     scrollBottom();
 
-    await sendMessageStreaming(text);
+    if (USE_STREAM) {
+        await sendMessageStreaming(text);
+    } else {
+        await sendMessageFallback(text);
+    }
 }
 
 // ── Events ────────────────────────────────────────────────────────
@@ -350,12 +357,12 @@ document.querySelectorAll('.topic-btn').forEach(btn => {
 document.addEventListener('DOMContentLoaded', () => {
     // Greeting
     messagesEl.appendChild(createBubble(
-        `Hi **${USERNAME}**! 👋 I'm **FinBot**, your offline AI financial mentor powered by Ollama.\n\nI can help with **budgeting, saving, SIP investing, debt payoff, CIBIL scores, tax saving**, and more — with real ₹ examples!\n\nPick a quick topic or type your question below.`,
+        `Hi **${USERNAME}**! 👋 I'm **FinBot**, your AI financial mentor powered by Groq.\n\nI can help with **budgeting, saving, SIP investing, debt payoff, CIBIL scores, tax saving**, and more — with real ₹ examples!\n\nPick a quick topic or type your question below.`,
         'bot'
     ));
     scrollBottom();
     // Live status check
-    checkOllamaStatus();
+    checkGroqStatus();
 });
 </script>
 
@@ -372,3 +379,9 @@ document.addEventListener('DOMContentLoaded', () => {
 </style>
 </body>
 </html>
+
+
+
+
+
+

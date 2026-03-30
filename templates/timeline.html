@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Timeline Simulator - FinLiteracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/timeline.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon-sm">Rs</div>
+        <span>FinLiteracy</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard" class="nav-item"><span class="nav-icon">DB</span> Dashboard</a>
+        <a href="/scenario" class="nav-item"><span class="nav-icon">SC</span> Scenarios</a>
+        <a href="/learning" class="nav-item"><span class="nav-icon">LP</span> Learning Path</a>
+        <a href="/invest-learn" class="nav-item"><span class="nav-icon">IV</span> Invest</a>
+        <a href="/timeline" class="nav-item active"><span class="nav-icon">TL</span> Timeline</a>
+        <a href="/mentor" class="nav-item"><span class="nav-icon">AI</span> AI Mentor</a>
+        <a href="/leaderboard" class="nav-item"><span class="nav-icon">LB</span> Leaderboard</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="streak-badge">Streak: {{ user.streak_days }} days</div>
+        <a href="/logout" class="nav-item nav-logout"><span class="nav-icon">LO</span> Logout</a>
+    </div>
+</aside>
+
+<main class="main-content">
+    <header class="page-header">
+        <div>
+            <h2 class="page-title">Life Timeline Finance Simulator</h2>
+            <p class="page-subtitle">Simulate your financial life from today to retirement with real-world events and decisions.</p>
+        </div>
+    </header>
+
+    <section class="timeline-grid">
+        <article class="card input-card">
+            <h3>Scenario A</h3>
+            <div class="form-grid">
+                <label>Current Age <input id="a_age" type="number" min="18" max="59" value="{{ user.age if user.age else 24 }}"></label>
+                <label>Retirement Age <input id="a_retirement_age" type="number" min="45" max="70" value="60"></label>
+                <label>Annual Income (INR) <input id="a_income" type="number" step="10000" value="800000"></label>
+                <label>Annual Expenses (INR) <input id="a_expenses" type="number" step="10000" value="480000"></label>
+                <label>Current Savings (INR) <input id="a_savings" type="number" step="10000" value="200000"></label>
+                <label>Savings Rate (0-1) <input id="a_savings_rate" type="number" step="0.01" min="0.05" max="0.80" value="0.25"></label>
+                <label>Risk Profile
+                    <select id="a_profile">
+                        <option value="conservative">Conservative</option>
+                        <option value="balanced" selected>Balanced</option>
+                        <option value="aggressive">Aggressive</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="decision-row">
+                <button class="btn btn-secondary" data-decision="invest_more">Invest More</button>
+                <button class="btn btn-secondary" data-decision="spend_more">Spend More</button>
+                <button class="btn btn-secondary" data-decision="take_loan">Take Loan</button>
+            </div>
+
+            <div class="compare-toggle">
+                <label><input id="compare_toggle" type="checkbox"> Enable Scenario Comparison</label>
+            </div>
+
+            <div id="scenario_b_block" class="form-grid hidden-block">
+                <h3>Scenario B</h3>
+                <label>Current Age <input id="b_age" type="number" min="18" max="59" value="24"></label>
+                <label>Retirement Age <input id="b_retirement_age" type="number" min="45" max="70" value="60"></label>
+                <label>Annual Income (INR) <input id="b_income" type="number" step="10000" value="900000"></label>
+                <label>Annual Expenses (INR) <input id="b_expenses" type="number" step="10000" value="500000"></label>
+                <label>Current Savings (INR) <input id="b_savings" type="number" step="10000" value="250000"></label>
+                <label>Savings Rate (0-1) <input id="b_savings_rate" type="number" step="0.01" min="0.05" max="0.80" value="0.30"></label>
+                <label>Risk Profile
+                    <select id="b_profile">
+                        <option value="conservative">Conservative</option>
+                        <option value="balanced">Balanced</option>
+                        <option value="aggressive" selected>Aggressive</option>
+                    </select>
+                </label>
+            </div>
+
+            <button id="run_btn" class="btn btn-primary run-btn">Run Simulation</button>
+        </article>
+
+        <article class="card output-card">
+            <div class="summary-grid">
+                <div class="summary-item"><span>Final Wealth (A)</span><strong id="final_a">-</strong></div>
+                <div class="summary-item"><span>Peak Wealth (A)</span><strong id="peak_a">-</strong></div>
+                <div class="summary-item"><span>Final Wealth (B)</span><strong id="final_b">-</strong></div>
+                <div class="summary-item"><span>Wealth Gap</span><strong id="wealth_gap">-</strong></div>
+            </div>
+
+            <div class="chart-wrap">
+                <canvas id="netWorthChart"></canvas>
+            </div>
+            <div class="chart-wrap">
+                <canvas id="cashflowChart"></canvas>
+            </div>
+
+            <section class="insight-box">
+                <h3>Financial Story</h3>
+                <p id="story_a">Run the simulation to generate your financial story.</p>
+                <p id="story_b" class="secondary-story"></p>
+            </section>
+        </article>
+    </section>
+</main>
+
+<script>
+const runBtn = document.getElementById('run_btn');
+const compareToggle = document.getElementById('compare_toggle');
+const scenarioBBlock = document.getElementById('scenario_b_block');
+
+let netWorthChart = null;
+let cashflowChart = null;
+let primaryPayload = null;
+
+function collectScenario(prefix) {
+    return {
+        age: Number(document.getElementById(`${prefix}_age`).value),
+        retirement_age: Number(document.getElementById(`${prefix}_retirement_age`).value),
+        income: Number(document.getElementById(`${prefix}_income`).value),
+        expenses: Number(document.getElementById(`${prefix}_expenses`).value),
+        savings: Number(document.getElementById(`${prefix}_savings`).value),
+        savings_rate: Number(document.getElementById(`${prefix}_savings_rate`).value),
+        profile: document.getElementById(`${prefix}_profile`).value,
+        decision_state: prefix === 'a' && primaryPayload ? (primaryPayload.decision_state || {}) : {}
+    };
+}
+
+function inr(value) {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value || 0);
+}
+
+function setSummary(primary, secondary, comparison) {
+    document.getElementById('final_a').textContent = inr(primary.summary.final_net_worth);
+    document.getElementById('peak_a').textContent = inr(primary.summary.peak_net_worth);
+    document.getElementById('story_a').textContent = primary.story;
+
+    if (secondary) {
+        document.getElementById('final_b').textContent = inr(secondary.summary.final_net_worth);
+        document.getElementById('wealth_gap').textContent = inr(comparison.final_wealth_gap);
+        document.getElementById('story_b').textContent = `Scenario B: ${secondary.story}`;
+    } else {
+        document.getElementById('final_b').textContent = '-';
+        document.getElementById('wealth_gap').textContent = '-';
+        document.getElementById('story_b').textContent = '';
+    }
+}
+
+function drawCharts(primary, secondary) {
+    const labels = primary.timeline.map(y => y.age);
+    const netA = primary.timeline.map(y => y.net_worth);
+    const netB = secondary ? secondary.timeline.map(y => y.net_worth) : [];
+
+    if (netWorthChart) netWorthChart.destroy();
+    netWorthChart = new Chart(document.getElementById('netWorthChart'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                { label: 'Scenario A Net Worth', data: netA, borderColor: '#0cbaba', backgroundColor: 'rgba(12,186,186,0.12)', tension: 0.2, fill: true },
+                ...(secondary ? [{ label: 'Scenario B Net Worth', data: netB, borderColor: '#ff7e2d', backgroundColor: 'rgba(255,126,45,0.10)', tension: 0.2, fill: true }] : [])
+            ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    if (cashflowChart) cashflowChart.destroy();
+    cashflowChart = new Chart(document.getElementById('cashflowChart'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                { label: 'Income (A)', data: primary.timeline.map(y => y.income), backgroundColor: 'rgba(0,200,117,0.65)' },
+                { label: 'Expenses (A)', data: primary.timeline.map(y => y.expenses), backgroundColor: 'rgba(255,77,106,0.65)' }
+            ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+
+async function runSimulation() {
+    const payload = { primary: collectScenario('a') };
+    if (compareToggle.checked) payload.secondary = collectScenario('b');
+
+    primaryPayload = payload.primary;
+
+    const resp = await fetch('/run-simulation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+        alert(data.error || 'Simulation failed');
+        return;
+    }
+
+    const primary = data.primary;
+    const secondary = data.secondary || null;
+    setSummary(primary, secondary, data.comparison || null);
+    drawCharts(primary, secondary);
+}
+
+async function applyDecision(decision) {
+    const payload = {
+        decision,
+        user_data: collectScenario('a')
+    };
+
+    const resp = await fetch('/decision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+        alert(data.error || 'Decision failed');
+        return;
+    }
+
+    primaryPayload = data.updated_user_data;
+    setSummary(data.primary, null, null);
+    drawCharts(data.primary, null);
+}
+
+compareToggle.addEventListener('change', () => {
+    scenarioBBlock.classList.toggle('hidden-block', !compareToggle.checked);
+});
+
+runBtn.addEventListener('click', runSimulation);
+document.querySelectorAll('[data-decision]').forEach(btn => {
+    btn.addEventListener('click', () => applyDecision(btn.dataset.decision));
+});
+</script>
+</body>
+</html>
+
+

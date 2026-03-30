@@ -12,6 +12,7 @@ from .achievements import achievements_bp
 from .mentor       import mentor_bp
 from .api          import api_bp
 from .invest_learn import invest_learn_bp
+from .timeline     import timeline_bp
 
 
 def register_routes(app):
@@ -26,3 +27,4 @@ def register_routes(app):
     app.register_blueprint(mentor_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(invest_learn_bp)
+    app.register_blueprint(timeline_bp)

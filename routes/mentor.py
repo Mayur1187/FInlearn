@@ -2,13 +2,13 @@
 FinLiteracy – AI Mentor Routes
 Handles: GET  /mentor
          POST /mentor/chat
-         GET  /mentor/status   ← new: live Ollama health check for UI
+         GET  /mentor/status
 """
 
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, Response, stream_with_context
-from services.ai_mentor import call_ai_mentor, get_ollama_status
+from services.ai_mentor import call_ai_mentor, get_groq_status
 from utils import get_current_user
-import os, requests, json
+import json
 
 mentor_bp = Blueprint('mentor', __name__)
 
@@ -23,11 +23,11 @@ def mentor():
 
 @mentor_bp.route('/mentor/status')
 def mentor_status():
-    """Returns Ollama live status for the UI indicator."""
+    """Returns Groq provider status for the UI indicator."""
     user = get_current_user()
     if not user:
         return jsonify({'error': 'Not authenticated'}), 401
-    status = get_ollama_status()
+    status = get_groq_status()
     return jsonify(status)
 
 
@@ -60,8 +60,8 @@ def mentor_chat():
 @mentor_bp.route('/mentor/chat/stream', methods=['POST'])
 def mentor_chat_stream():
     """
-    Streaming endpoint — yields SSE tokens as Ollama produces them.
-    The frontend EventSource reads these for a real-time typewriter effect.
+    Streaming endpoint — yields SSE chunks for the Groq response.
+    Frontend reads these chunks for a real-time typewriter effect.
     """
     user = get_current_user()
     if not user:
@@ -82,54 +82,17 @@ def mentor_chat_stream():
             f"Level: {user.level}"
         )
 
-    from services.ai_mentor import _SYSTEM_PROMPT, _pick_model, _smart_fallback
-    system = _SYSTEM_PROMPT
-    if ctx:
-        system += f"\n\nUser profile: {ctx}"
-
-    base_url = os.environ.get('OLLAMA_BASE_URL', 'http://localhost:11434').strip().rstrip('/')
-
     def generate():
         try:
-            # Detect model
-            tag_resp = requests.get(f'{base_url}/api/tags', timeout=3)
-            models = [m['name'] for m in tag_resp.json().get('models', [])]
-            model = _pick_model(models)
-        except Exception:
-            model = 'llama3'
-
-        try:
-            with requests.post(
-                f'{base_url}/api/chat',
-                json={
-                    'model': model,
-                    'stream': True,
-                    'options': {'temperature': 0.7, 'num_predict': 600},
-                    'messages': [
-                        {'role': 'system', 'content': system},
-                        {'role': 'user',   'content': message},
-                    ],
-                },
-                stream=True,
-                timeout=120,
-            ) as resp:
-                resp.raise_for_status()
-                for line in resp.iter_lines():
-                    if line:
-                        chunk = json.loads(line)
-                        token = chunk.get('message', {}).get('content', '')
-                        if token:
-                            yield f"data: {json.dumps({'token': token})}\n\n"
-                        if chunk.get('done'):
-                            yield "data: [DONE]\n\n"
-                            return
+            reply = call_ai_mentor(message, ctx)
+            for token in reply.split():
+                yield f"data: {json.dumps({'token': token + ' '})}\n\n"
+            yield "data: [DONE]\n\n"
         except Exception as exc:
-            # Fallback: send full reply as single chunk
-            fallback = _smart_fallback(message)
-            yield f"data: {json.dumps({'token': fallback})}\n\n"
+            err_text = f"Error while generating response: {str(exc)}"
+            yield f"data: {json.dumps({'token': err_text})}\n\n"
             yield "data: [DONE]\n\n"
 
     return Response(stream_with_context(generate()),
                     mimetype='text/event-stream',
                     headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
-

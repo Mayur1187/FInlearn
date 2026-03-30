@@ -15,10 +15,8 @@ Set these environment variables before running the app:
     GITHUB_CLIENT_SECRET  = "your-github-client-secret"
     → Authorization callback URL: http://localhost:5000/auth/github/callback
 
-  AI Mentor (choose one):
-    GROQ_API_KEY          = "your-groq-api-key"   (recommended – free tier available)
-    OLLAMA_BASE_URL       = "http://localhost:11434"  (local Ollama)
-    ANTHROPIC_API_KEY     = "your-anthropic-key"  (fallback already in codebase)
+  AI Mentor:
+    GROQ_API_KEY          = "your-groq-api-key"
 ────────────────────────────────────────────────────────────────────────────────
 """
 
@@ -29,7 +27,15 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'hackathon-dev-secret-2025')
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'finance_app.db')
+
+    # Railway provides DATABASE_URL for managed Postgres.
+    _database_url = os.environ.get('DATABASE_URL')
+    if _database_url and _database_url.startswith('postgres://'):
+        _database_url = _database_url.replace('postgres://', 'postgresql://', 1)
+    SQLALCHEMY_DATABASE_URI = _database_url or (
+        'sqlite:///' + os.path.join(basedir, 'finance_app.db')
+    )
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # ── Google OAuth ──────────────────────────────────────────
@@ -40,10 +46,8 @@ class Config:
     GITHUB_CLIENT_ID     = os.environ.get('GITHUB_CLIENT_ID',     '')
     GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET', '')
 
-    # ── AI Mentor (LLaMA 3 via Groq or Ollama) ────────────────
-    GROQ_API_KEY     = os.environ.get('GROQ_API_KEY',     '')
-    OLLAMA_BASE_URL  = os.environ.get('OLLAMA_BASE_URL',  'http://localhost:11434')
-    ANTHROPIC_API_KEY= os.environ.get('ANTHROPIC_API_KEY','')
+    # ── AI Mentor (Groq) ────────────────
+    GROQ_API_KEY     = os.environ.get('GROQ_API_KEY', '')
 
 
 # ─── Investment Assets Catalog ────────────────────────────────────────────────

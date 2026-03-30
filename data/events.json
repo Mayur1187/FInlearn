@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Buy Car",
+    "age": 28,
+    "min_age": 26,
+    "max_age": 32,
+    "probability": 0.45,
+    "one_time_cost": 350000,
+    "expense_spike": 80000,
+    "income_multiplier": 1.0
+  },
+  {
+    "name": "Marriage",
+    "age": 30,
+    "min_age": 27,
+    "max_age": 35,
+    "probability": 0.40,
+    "one_time_cost": 600000,
+    "expense_spike": 150000,
+    "income_multiplier": 1.0
+  },
+  {
+    "name": "Medical Emergency",
+    "age": 40,
+    "min_age": 35,
+    "max_age": 50,
+    "probability": 0.30,
+    "one_time_cost": 250000,
+    "expense_spike": 220000,
+    "income_multiplier": 0.99
+  },
+  {
+    "name": "Job Loss",
+    "age": 45,
+    "min_age": 30,
+    "max_age": 55,
+    "probability": 0.22,
+    "one_time_cost": 0,
+    "expense_spike": 100000,
+    "income_multiplier": 0.80
+  }
+]

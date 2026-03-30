@@ -16,6 +16,7 @@
         <a href="/scenario"     class="nav-item"><span class="nav-icon">🎮</span> Scenarios</a>
         <a href="/learning"     class="nav-item active"><span class="nav-icon">📚</span> Learning Path</a>
         <a href="/invest"       class="nav-item"><span class="nav-icon">📈</span> Invest</a>
+        <a href="/timeline"     class="nav-item"><span class="nav-icon">TL</span> Timeline</a>
         <a href="/mentor"       class="nav-item"><span class="nav-icon">🤖</span> AI Mentor</a>
         <a href="/leaderboard"  class="nav-item"><span class="nav-icon">🏅</span> Leaderboard</a>
         <a href="/achievements" class="nav-item"><span class="nav-icon">🏆</span> Achievements</a>
@@ -67,12 +68,13 @@
         <!-- Question cards -->
         {% for q in questions %}
         <div class="q-card {{ 'q-visible' if loop.first else 'q-hidden' }}" id="q-{{ loop.index0 }}">
+            {% set q_idx = loop.index0 %}
             <div class="q-number">Question {{ loop.index }}</div>
             <div class="q-text">{{ q.q }}</div>
             <div class="q-options">
                 {% for key, val in q.options.items() %}
-                <button class="q-opt" data-q="{{ loop.index0 }}" data-opt="{{ key }}"
-                        onclick="selectOption({{ loop.index0 }}, '{{ key }}', this)">
+                <button class="q-opt" data-q="{{ q_idx }}" data-opt="{{ key }}"
+                        onclick="selectOption({{ q_idx }}, '{{ key }}', this)">
                     <span class="opt-label">{{ key }}</span>
                     <span class="opt-text">{{ val }}</span>
                 </button>
@@ -219,3 +221,5 @@ function showResults(data) {
 </script>
 </body>
 </html>
+
+

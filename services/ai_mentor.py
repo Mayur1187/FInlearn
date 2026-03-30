@@ -1,208 +1,117 @@
 """
-FinLiteracy – AI Mentor Service
-Priority chain:
-  1. Ollama    (local – primary, offline AI)
-  2. Groq API  (LLaMA 3 – cloud fallback if GROQ_API_KEY set)
-  3. Anthropic (Claude Haiku – if ANTHROPIC_API_KEY set)
-  4. Smart rule-based fallback  ← always works, no API needed
+FinLiteracy - AI Mentor Service
+Provider:
+  1. Groq API (primary)
+  2. Optional local rule fallback (only when explicitly enabled)
 """
 
 import os
 import re
 import requests
 
-# ─── System Prompt ────────────────────────────────────────────────────────────
-
 _SYSTEM_PROMPT = (
     "You are FinBot, a friendly and knowledgeable financial literacy mentor "
-    "for young Indian adults aged 18–25. You teach personal finance in "
-    "simple, engaging language with concrete ₹ examples. "
+    "for young Indian adults aged 18-25. You teach personal finance in "
+    "simple, engaging language with concrete INR examples. "
     "Topics: budgeting (50/30/20 rule), saving, investing (SIPs, mutual funds, "
     "index funds, stocks, FD, bonds), debt management, emergency funds, "
     "credit scores (CIBIL), and financial independence (FIRE movement). "
-    "Keep replies to 2–3 focused paragraphs. Use **bold** for key terms. "
+    "Keep replies to 2-3 focused paragraphs. Use **bold** for key terms. "
     "Never recommend specific stocks or guarantee returns."
 )
 
 
-# ─── Ollama helpers ───────────────────────────────────────────────────────────
-
-def get_ollama_status() -> dict:
-    """
-    Returns {'online': bool, 'models': [str], 'active_model': str}
-    Used by /mentor/status endpoint to show live status in the UI.
-    """
-    base_url = os.environ.get('OLLAMA_BASE_URL', 'http://localhost:11434').strip()
-    try:
-        resp = requests.get(f'{base_url}/api/tags', timeout=3)
-        resp.raise_for_status()
-        models = [m['name'] for m in resp.json().get('models', [])]
-        active = _pick_model(models)
-        return {'online': True, 'models': models, 'active_model': active, 'url': base_url}
-    except Exception:
-        return {'online': False, 'models': [], 'active_model': None, 'url': base_url}
+def _resolve_groq_key() -> str:
+    return os.environ.get('GROQ_API_KEY', '').strip() or os.environ.get('GROK_API_KEY', '').strip()
 
 
-def _pick_model(models: list) -> str:
-    """Pick best available model from Ollama's model list."""
-    if not models:
-        return 'llama3'   # default attempt even if list is empty
-    # Preference order
-    preferred = ['llama3', 'llama3:latest', 'llama3:8b', 'llama3.2', 'mistral',
-                 'gemma', 'phi3', 'qwen2', 'deepseek-r1', 'llama2']
-    for p in preferred:
-        for m in models:
-            if m.lower().startswith(p):
-                return m
-    return models[0]   # use whatever is installed
+def _resolve_model_candidates() -> list:
+    preferred = os.environ.get('GROQ_MODEL', '').strip()
+    models = []
+    if preferred:
+        models.append(preferred)
+    models.extend([
+        'llama-3.3-70b-versatile',
+        'llama-3.1-8b-instant',
+        'llama3-8b-8192',
+    ])
+    seen = set()
+    ordered = []
+    for m in models:
+        if m not in seen:
+            ordered.append(m)
+            seen.add(m)
+    return ordered
 
 
-# ─── Public entry point ───────────────────────────────────────────────────────
+def get_groq_status() -> dict:
+    key = _resolve_groq_key()
+    model = _resolve_model_candidates()[0]
+    if not key:
+        return {
+            'online': False,
+            'provider': 'groq',
+            'model': model,
+            'configured': False,
+            'error': 'Missing GROQ_API_KEY',
+        }
+    return {
+        'online': True,
+        'provider': 'groq',
+        'model': model,
+        'configured': True,
+    }
+
 
 def call_ai_mentor(user_message: str, user_context: str = None) -> str:
     system = _SYSTEM_PROMPT
     if user_context:
         system += f"\n\nUser profile: {user_context}"
 
-    # 1. Ollama (local – primary offline AI)
-   
-    # 2. Groq (cloud fallback – only if key set)
-    groq_key = os.environ.get('GROQ_API_KEY', '').strip()
-    if groq_key:
-        reply = _call_groq(user_message, system, groq_key)
-        if reply:
-            return reply
+    groq_key = _resolve_groq_key()
+    if not groq_key:
+        return 'AI is not configured. Please set GROQ_API_KEY in your .env and restart the app.'
 
-    # 3. Anthropic Claude (cloud fallback – only if key set)
-    anthropic_key = os.environ.get('ANTHROPIC_API_KEY', '').strip()
-    if anthropic_key:
-        reply = _call_anthropic(user_message, system, anthropic_key)
-        if reply:
-            return reply
+    reply = _call_groq(user_message, system, groq_key)
+    if reply:
+        return reply
 
-    # 4. Smart rule-based fallback (always works, no network needed)
-    return _smart_fallback(user_message)
+    allow_local_fallback = os.environ.get('AI_LOCAL_FALLBACK', 'false').strip().lower() in {'1', 'true', 'yes'}
+    if allow_local_fallback:
+        return _smart_fallback(user_message)
 
+    return 'AI provider request failed. Check GROQ_API_KEY, GROQ_MODEL, and server/network connectivity.'
 
-# ─── Provider: Groq ───────────────────────────────────────────────────────────
 
 def _call_groq(message: str, system: str, api_key: str):
-    try:
-        resp = requests.post(
-            'https://api.groq.com/openai/v1/chat/completions',
-            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
-            json={
-                'model': 'llama3-8b-8192',
-                'max_tokens': 500,
-                'temperature': 0.7,
-                'messages': [
-                    {'role': 'system', 'content': system},
-                    {'role': 'user',   'content': message},
-                ],
-            },
-            timeout=20,
-        )
-        resp.raise_for_status()
-        return resp.json()['choices'][0]['message']['content'].strip()
-    except Exception as exc:
-        print(f"[AI Mentor] Groq error: {exc}")
-        return None
+    errors = []
+    for model in _resolve_model_candidates():
+        try:
+            resp = requests.post(
+                'https://api.groq.com/openai/v1/chat/completions',
+                headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+                json={
+                    'model': model,
+                    'max_tokens': 500,
+                    'temperature': 0.7,
+                    'messages': [
+                        {'role': 'system', 'content': system},
+                        {'role': 'user', 'content': message},
+                    ],
+                },
+                timeout=25,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            content = data['choices'][0]['message']['content'].strip()
+            if content:
+                return content
+        except Exception as exc:
+            errors.append(f'{model}: {exc}')
 
-
-# ─── Provider: Ollama ─────────────────────────────────────────────────────────
-
-def _call_ollama(message: str, system: str, base_url: str):
-    base = base_url.rstrip('/')
-    # Auto-detect which model is available
-    try:
-        tag_resp = requests.get(f'{base}/api/tags', timeout=3)
-        tag_resp.raise_for_status()
-        models = [m['name'] for m in tag_resp.json().get('models', [])]
-        model = _pick_model(models)
-    except Exception:
-        model = 'llama3'   # best-effort default
-
-    # Try /api/chat first (Ollama >= 0.1.14)
-    try:
-        resp = requests.post(
-            f'{base}/api/chat',
-            json={
-                'model': model,
-                'stream': False,
-                'options': {'temperature': 0.7, 'num_predict': 600},
-                'messages': [
-                    {'role': 'system', 'content': system},
-                    {'role': 'user',   'content': message},
-                ],
-            },
-            timeout=120,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        # /api/chat returns {"message": {"role": "assistant", "content": "..."}}
-        text = data.get('message', {}).get('content', '').strip()
-        if text:
-            print(f"[AI Mentor] Ollama ({model}) responded via /api/chat")
-            return text
-    except Exception as exc:
-        print(f"[AI Mentor] Ollama /api/chat error: {exc}")
-
-    # Fallback to /api/generate (older Ollama builds)
-    try:
-        prompt = f"<s>[INST] <<SYS>>\n{system}\n<</SYS>>\n\n{message} [/INST]"
-        resp = requests.post(
-            f'{base}/api/generate',
-            json={
-                'model': model,
-                'prompt': prompt,
-                'stream': False,
-                'options': {'temperature': 0.7, 'num_predict': 600},
-            },
-            timeout=120,
-        )
-        resp.raise_for_status()
-        text = resp.json().get('response', '').strip()
-        if text:
-            print(f"[AI Mentor] Ollama ({model}) responded via /api/generate")
-            return text
-    except Exception as exc:
-        print(f"[AI Mentor] Ollama /api/generate error: {exc}")
-
+    if errors:
+        print('[AI Mentor] Groq errors -> ' + ' | '.join(errors))
     return None
-
-
-# ─── Provider: Anthropic ──────────────────────────────────────────────────────
-
-def _call_anthropic(message: str, system: str, api_key: str):
-    try:
-        resp = requests.post(
-            'https://api.anthropic.com/v1/messages',
-            headers={
-                'x-api-key': api_key,
-                'anthropic-version': '2023-06-01',
-                'content-type': 'application/json',
-            },
-            json={
-                'model': 'claude-haiku-4-5-20251001',
-                'max_tokens': 500,
-                'system': system,
-                'messages': [{'role': 'user', 'content': message}],
-            },
-            timeout=15,
-        )
-        resp.raise_for_status()
-        return resp.json()['content'][0]['text'].strip()
-    except Exception as exc:
-        print(f"[AI Mentor] Anthropic error: {exc}")
-        return None
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# Smart Rule-Based Fallback
-# Scores every topic against the full message, picks the best match,
-# then builds a direct, question-specific answer.
-# ═══════════════════════════════════════════════════════════════════════════════
-
 # Each topic has: keywords (scored by weight), a direct answer, and follow-up tips.
 _TOPICS = [
     {
@@ -546,3 +455,6 @@ def _contextual_default(message: str) -> str:
         "*'How much emergency fund do I need?'*, or *'How to save on taxes?'*\n\n"
         "I give clear, actionable answers with real ₹ examples tailored for young Indian adults. 🚀"
     )
+
+
+
