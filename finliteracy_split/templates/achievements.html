@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Achievements – FinLiteracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/achievements.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon-sm">₹</div>
+        <span>FinLiteracy</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard"    class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+        <a href="/scenario"     class="nav-item"><span class="nav-icon">🎮</span> Scenarios</a>
+        <a href="/learning"     class="nav-item"><span class="nav-icon">📚</span> Learning Path</a>
+        <a href="/invest"       class="nav-item"><span class="nav-icon">📈</span> Invest</a>
+        <a href="/mentor"       class="nav-item"><span class="nav-icon">🤖</span> AI Mentor</a>
+        <a href="/leaderboard"  class="nav-item"><span class="nav-icon">🏅</span> Leaderboard</a>
+        <a href="/achievements" class="nav-item active"><span class="nav-icon">🏆</span> Achievements</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="streak-badge">🔥 {{ user.streak_days }} day streak</div>
+        <a href="/logout" class="nav-item nav-logout"><span class="nav-icon">👋</span> Logout</a>
+    </div>
+</aside>
+
+<main class="main-content">
+    <header class="page-header">
+        <div>
+            <h2 class="page-title">🏆 Achievements</h2>
+            <p class="page-subtitle">Earn badges by mastering financial skills. You've unlocked {{ earned_count }} of {{ total_count }}.</p>
+        </div>
+        <div class="header-coins">
+            <span class="coin-display">🪙 {{ user.coins }} coins</span>
+        </div>
+    </header>
+
+    <!-- Progress banner -->
+    <div class="achievements-progress">
+        <div>
+            <div class="ap-big">{{ earned_count }}/{{ total_count }}</div>
+            <div class="ap-label">Badges Earned</div>
+        </div>
+        <div style="flex:1;">
+            <div style="font-size:0.88rem;color:rgba(255,255,255,0.8);margin-bottom:0.5rem;">
+                Overall Achievement Progress
+            </div>
+            <div class="ap-bar-track">
+                <div class="ap-bar-fill" style="width: {{ (earned_count / total_count * 100) | int }}%"></div>
+            </div>
+            <div style="font-size:0.78rem;color:rgba(255,255,255,0.5);margin-top:0.4rem;">
+                {{ total_count - earned_count }} more badges to unlock!
+            </div>
+        </div>
+        <div>
+            <a href="/scenario" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.25);">
+                Earn More Badges 🎯
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+        <button class="scenario-tab active" onclick="filterBadges('all', this)">All ({{ total_count }})</button>
+        <button class="scenario-tab" onclick="filterBadges('earned', this)">✅ Earned ({{ earned_count }})</button>
+        <button class="scenario-tab" onclick="filterBadges('locked', this)">🔒 Locked ({{ total_count - earned_count }})</button>
+    </div>
+
+    <!-- Badges Grid -->
+    <div class="achievements-grid" id="badges-grid">
+        {% for badge in all_badges %}
+        <div class="achievement-card {{ 'earned' if badge.earned else 'locked' }}"
+             data-status="{{ 'earned' if badge.earned else 'locked' }}">
+            <div class="achievement-icon-wrap">
+                <span style="font-size:1.8rem;">{{ badge.icon }}</span>
+            </div>
+            <div class="achievement-name">{{ badge.name }}</div>
+            <div class="achievement-desc">{{ badge.desc }}</div>
+            {% if badge.earned %}
+            <div class="achievement-date">✓ Earned {{ badge.earned_at }}</div>
+            {% else %}
+            <div class="achievement-date" style="color:var(--text-muted);">🔒 Locked</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Earning tips -->
+    <div class="card" style="margin-top:2rem;background:linear-gradient(135deg,#f0fff8,#f0faff);">
+        <h3 class="card-title" style="margin-bottom:1rem;">💡 How to Earn Badges</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0.75rem;font-size:0.85rem;color:var(--text-secondary);">
+            <div>🎮 <strong style="color:var(--blue-dark);">First Save</strong> — Complete your first scenario</div>
+            <div>📊 <strong style="color:var(--blue-dark);">Budget Master</strong> — Get 70%+ in budgeting scenarios</div>
+            <div>🔥 <strong style="color:var(--blue-dark);">3-Day Streak</strong> — Login 3 days in a row</div>
+            <div>⚡ <strong style="color:var(--blue-dark);">Week Warrior</strong> — Maintain a 7-day streak</div>
+            <div>💳 <strong style="color:var(--blue-dark);">Debt Destroyer</strong> — Master debt management</div>
+            <div>📈 <strong style="color:var(--blue-dark);">Smart Investor</strong> — Score 60%+ in investing</div>
+            <div>🌐 <strong style="color:var(--blue-dark);">Diversified</strong> — Invest in 3+ asset types</div>
+            <div>🎯 <strong style="color:var(--blue-dark);">Scenario Pro</strong> — Complete 5 scenarios</div>
+            <div>🏆 <strong style="color:var(--blue-dark);">Finance Champion</strong> — Complete ALL learning levels</div>
+        </div>
+    </div>
+</main>
+
+
+<script>
+function filterBadges(status, btn) {
+    document.querySelectorAll('.scenario-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.achievement-card').forEach(card => {
+        const show = status === 'all' || card.dataset.status === status;
+        card.style.display = show ? 'block' : 'none';
+    });
+}
+</script>
+</body>
+</html>

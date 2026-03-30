@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ topic.title }} – FinLiteracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/learning_path.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon-sm">₹</div><span>FinLiteracy</span></div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard"    class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+        <a href="/scenario"     class="nav-item"><span class="nav-icon">🎮</span> Scenarios</a>
+        <a href="/learning"     class="nav-item active"><span class="nav-icon">📚</span> Learning Path</a>
+        <a href="/invest"       class="nav-item"><span class="nav-icon">📈</span> Invest</a>
+        <a href="/mentor"       class="nav-item"><span class="nav-icon">🤖</span> AI Mentor</a>
+        <a href="/leaderboard"  class="nav-item"><span class="nav-icon">🏅</span> Leaderboard</a>
+        <a href="/achievements" class="nav-item"><span class="nav-icon">🏆</span> Achievements</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="streak-badge">🔥 {{ user.streak_days }} day streak</div>
+        <a href="/logout" class="nav-item nav-logout"><span class="nav-icon">👋</span> Logout</a>
+    </div>
+</aside>
+
+<main class="main-content topic-main">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="/learning">Learning Path</a> /
+        <a href="/learning/{{ level.slug }}">{{ level.title }}</a> /
+        <span>{{ topic.title }}</span>
+    </div>
+
+    <!-- Topic header -->
+    <div class="topic-header">
+        <div class="topic-header-left">
+            <div class="topic-big-icon">{{ topic.icon }}</div>
+            <div>
+                <div class="topic-level-label">{{ level.icon }} {{ level.title }}</div>
+                <h1 class="topic-title">{{ topic.title }}</h1>
+                <div class="topic-meta">
+                    Topic {{ topic_index }} of {{ total_topics }} &nbsp;·&nbsp;
+                    {{ topic.steps | length }} reading sections
+                </div>
+            </div>
+        </div>
+        {% if is_done %}
+        <div class="done-badge">✅ Completed</div>
+        {% endif %}
+    </div>
+
+    <!-- Step progress dots -->
+    <div class="step-dots" id="step-dots">
+        {% for step in topic.steps %}
+        <div class="step-dot {{ 'dot-active' if loop.first else '' }}" data-step="{{ loop.index0 }}">{{ loop.index }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- Steps container -->
+    <div class="steps-wrapper" id="steps-wrapper">
+        {% for step in topic.steps %}
+        <div class="step-card {{ 'step-visible' if loop.first else 'step-hidden' }}" id="step-{{ loop.index0 }}">
+            <div class="step-num">Step {{ loop.index }} of {{ topic.steps | length }}</div>
+            <h2 class="step-title">{{ step.title }}</h2>
+            <div class="step-body">{{ step.body | safe }}</div>
+
+            <div class="step-footer">
+                {% if not loop.last %}
+                <button class="btn btn-primary" onclick="nextStep({{ loop.index0 }})">
+                    Next: {{ topic.steps[loop.index].title }} →
+                </button>
+                {% else %}
+                <!-- Last step — show Submit/Complete button -->
+                {% if is_done %}
+                <div class="already-done-banner">
+                    ✅ You've already completed this topic!
+                </div>
+                {% else %}
+                <button class="btn btn-primary btn-complete" id="complete-btn" onclick="completeTopic()">
+                    ✅ Mark as Complete &amp; Earn {{ 50 }} XP
+                </button>
+                {% endif %}
+                {% endif %}
+                {% if not loop.first %}
+                <button class="btn btn-outline" onclick="prevStep({{ loop.index0 }})" style="margin-top:0.5rem;">← Previous</button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Navigation between topics -->
+    <div class="topic-nav">
+        {% if prev_topic %}
+        <a href="/learning/{{ level.slug }}/{{ prev_topic.slug }}" class="btn btn-outline">← {{ prev_topic.title }}</a>
+        {% else %}
+        <a href="/learning/{{ level.slug }}" class="btn btn-outline">← Back to Level</a>
+        {% endif %}
+
+        {% if next_topic %}
+        <a href="/learning/{{ level.slug }}/{{ next_topic.slug }}" class="btn btn-outline" id="next-topic-btn">{{ next_topic.title }} →</a>
+        {% else %}
+        <a href="/learning/{{ level.slug }}" class="btn btn-outline">Back to Level →</a>
+        {% endif %}
+    </div>
+
+    <!-- Completion toast -->
+    <div class="completion-toast hidden" id="completion-toast">
+        <div class="ct-icon">🎉</div>
+        <div class="ct-text">
+            <strong>Topic Complete!</strong>
+            <div>+50 XP and +10 coins earned!</div>
+        </div>
+    </div>
+</main>
+
+<script>
+const LEVEL_SLUG = {{ level.slug | tojson }};
+const TOPIC_SLUG = {{ topic.slug | tojson }};
+const TOTAL_STEPS = {{ topic.steps | length }};
+let currentStep = 0;
+
+function goToStep(idx) {
+    // Hide current
+    document.getElementById('step-' + currentStep).classList.remove('step-visible');
+    document.getElementById('step-' + currentStep).classList.add('step-hidden');
+    document.querySelectorAll('.step-dot')[currentStep].classList.remove('dot-active');
+    document.querySelectorAll('.step-dot')[currentStep].classList.add('dot-done');
+
+    // Show next
+    currentStep = idx;
+    document.getElementById('step-' + currentStep).classList.remove('step-hidden');
+    document.getElementById('step-' + currentStep).classList.add('step-visible');
+    document.querySelectorAll('.step-dot')[currentStep].classList.add('dot-active');
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function nextStep(fromIdx) { if (fromIdx + 1 < TOTAL_STEPS) goToStep(fromIdx + 1); }
+function prevStep(fromIdx) { if (fromIdx > 0) goToStep(fromIdx - 1); }
+
+// Click on step dot
+document.querySelectorAll('.step-dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+        const idx = parseInt(dot.dataset.step);
+        if (idx !== currentStep) goToStep(idx);
+    });
+});
+
+async function completeTopic() {
+    const btn = document.getElementById('complete-btn');
+    if (!btn) return;
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    try {
+        const resp = await fetch(`/learning/${LEVEL_SLUG}/${TOPIC_SLUG}/complete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await resp.json();
+
+        if (data.success) {
+            btn.textContent = '✅ Completed!';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline');
+
+            // Show toast
+            const toast = document.getElementById('completion-toast');
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 4000);
+
+            // If all topics done — show quiz CTA
+            if (data.all_done) {
+                setTimeout(() => {
+                    if (confirm('🎉 You\'ve completed all topics! Ready to take the quiz and earn your certificate?')) {
+                        window.location.href = `/learning/${LEVEL_SLUG}/quiz`;
+                    }
+                }, 1000);
+            }
+        }
+    } catch (err) {
+        btn.disabled = false;
+        btn.textContent = '✅ Mark as Complete';
+        console.error(err);
+    }
+}
+</script>
+</body>
+</html>

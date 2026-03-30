@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Mentor – FinLiteracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_mentor.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon-sm">₹</div>
+        <span>FinLiteracy</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard"    class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+        <a href="/scenario"     class="nav-item"><span class="nav-icon">🎮</span> Scenarios</a>
+        <a href="/learning"     class="nav-item"><span class="nav-icon">📚</span> Learning Path</a>
+        <a href="/invest"       class="nav-item"><span class="nav-icon">📈</span> Invest</a>
+        <a href="/mentor"       class="nav-item active"><span class="nav-icon">🤖</span> AI Mentor</a>
+        <a href="/leaderboard"  class="nav-item"><span class="nav-icon">🏅</span> Leaderboard</a>
+        <a href="/achievements" class="nav-item"><span class="nav-icon">🏆</span> Achievements</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="streak-badge">🔥 {{ user.streak_days }} day streak</div>
+        <a href="/logout" class="nav-item nav-logout"><span class="nav-icon">👋</span> Logout</a>
+    </div>
+</aside>
+
+<main class="main-content">
+    <header class="page-header">
+        <div>
+            <h2 class="page-title">🤖 AI Financial Mentor</h2>
+            <p class="page-subtitle">Ask me anything about money, budgeting, saving, or investing!</p>
+        </div>
+    </header>
+
+    <div class="mentor-layout">
+        <!-- Chat Area -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="mentor-avatar">🤖</div>
+                <div class="mentor-info">
+                    <strong>FinBot — AI Mentor</strong>
+                    <span class="mentor-status">● Online · Powered by Claude AI</span>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chat-messages">
+                <div class="message message-bot">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-bubble">
+                        <p>Hi <strong>{{ user.username }}</strong>! 👋 I'm FinBot, your AI financial mentor.</p>
+                        <p>I can help with <strong>budgeting, saving, investing, debt management, SIPs, credit scores</strong>, and more — all tailored for young Indian adults!</p>
+                    </div>
+                </div>
+                <div class="message message-bot">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-bubble">
+                        <p>Try asking me:</p>
+                        <ul>
+                            <li>How do I start a SIP investment?</li>
+                            <li>What is the 50/30/20 rule?</li>
+                            <li>How do I improve my CIBIL score?</li>
+                            <li>What is FIRE movement?</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="typing-indicator hidden" id="typing">
+                <div class="message-avatar">🤖</div>
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" class="chat-input"
+                       placeholder="Ask a financial question…"
+                       onkeypress="handleEnter(event)" />
+                <button class="chat-send-btn" onclick="sendMessage()">Send ➤</button>
+            </div>
+        </div>
+
+        <!-- Topics sidebar -->
+        <div class="mentor-topics">
+            <h4>📌 Quick Topics</h4>
+            <button class="topic-btn" onclick="quickAsk('How do I create a monthly budget using the 50/30/20 rule?')">💰 50/30/20 Budget</button>
+            <button class="topic-btn" onclick="quickAsk('What is the best way to start saving money in India?')">🏦 Start saving</button>
+            <button class="topic-btn" onclick="quickAsk('How to start a SIP investment in India as a beginner?')">📈 SIP investing</button>
+            <button class="topic-btn" onclick="quickAsk('How to pay off credit card debt fast using the avalanche method?')">💳 Pay off debt</button>
+            <button class="topic-btn" onclick="quickAsk('What is an emergency fund and how much should I save?')">🛡️ Emergency fund</button>
+            <button class="topic-btn" onclick="quickAsk('How does CIBIL credit score work and how can I improve it?')">📊 CIBIL score</button>
+            <button class="topic-btn" onclick="quickAsk('What are the differences between mutual funds FD stocks and crypto?')">🌐 Asset classes</button>
+            <button class="topic-btn" onclick="quickAsk('What is FIRE financial independence retire early movement?')">🔥 FIRE movement</button>
+
+            <div class="mentor-resources">
+                <h4>📚 Resources</h4>
+                <a href="/learning"     class="resource-link">→ Learning Path</a>
+                <a href="/scenario"     class="resource-link">→ Practice Scenarios</a>
+                <a href="/invest"       class="resource-link">→ Investment Simulator</a>
+                <a href="/achievements" class="resource-link">→ Achievements</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="{{ url_for('static', filename='js/ai_mentor.js') }}"></script>
+</body>
+</html>

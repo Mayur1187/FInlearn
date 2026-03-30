@@ -1,0 +1,137 @@
+/* ============================================================
+   FinLiteracy – Scenario Page Styles
+   Used by: scenario.html
+   ============================================================ */
+
+.scenario-wrap { display: grid; grid-template-columns: 1fr 240px; gap: 1.5rem; }
+.scenario-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.scenario-tab {
+    padding: 0.5rem 1.1rem;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: white;
+    color: var(--text-secondary);
+    transition: all var(--transition);
+}
+.scenario-tab.active { background: var(--green); border-color: var(--green); color: white; }
+.scenario-tab:hover:not(.active) { border-color: var(--green); color: var(--green); }
+
+.scenario-card {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    animation: fadeInUp 0.4s ease;
+}
+.scenario-meta {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: var(--off-white);
+    border-bottom: 1px solid var(--border);
+}
+.scenario-tag {
+    font-size: 0.78rem; font-weight: 700;
+    color: var(--blue-light);
+    background: rgba(26,64,128,0.08);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+}
+.scenario-difficulty { font-size: 0.82rem; color: var(--text-muted); }
+.scenario-question { padding: 1.75rem 1.5rem 1.25rem; text-align: center; }
+.scenario-avatar { font-size: 3rem; margin-bottom: 1rem; line-height: 1; }
+.scenario-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.2rem; font-weight: 800;
+    color: var(--blue-dark);
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
+}
+.scenario-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.65; max-width: 560px; margin: 0 auto; }
+
+.scenario-options { display: flex; flex-direction: column; gap: 0.75rem; padding: 1.25rem 1.5rem; }
+.scenario-btn {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--off-white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition);
+    text-align: left;
+    font-family: 'DM Sans', sans-serif;
+    width: 100%;
+}
+.scenario-btn:hover:not(:disabled) {
+    border-color: var(--green);
+    background: #f0fff8;
+    transform: translateX(4px);
+    box-shadow: var(--shadow-sm);
+}
+.scenario-btn.selected {
+    border-color: var(--green);
+    background: linear-gradient(135deg, rgba(0,200,117,0.1), rgba(0,212,255,0.05));
+    opacity: 1 !important;
+}
+.scenario-btn:disabled { cursor: not-allowed; }
+.option-icon { font-size: 1.6rem; flex-shrink: 0; }
+.option-content { flex: 1; text-align: left; }
+.option-content strong { display: block; font-size: 0.92rem; color: var(--text-primary); margin-bottom: 0.2rem; }
+.option-content p { font-size: 0.8rem; color: var(--text-secondary); margin: 0; }
+.option-reward { font-size: 0.78rem; font-weight: 700; padding: 0.3rem 0.6rem; border-radius: 20px; white-space: nowrap; }
+.option-reward.low    { background: #fff5f0; color: var(--orange); }
+.option-reward.medium { background: #f0faff; color: var(--blue-light); }
+.option-reward.high   { background: #f0fff8; color: var(--green-dark); }
+
+.scenario-result {
+    margin: 0 1.5rem 1.5rem;
+    background: linear-gradient(135deg, #f0fff8, #f0faff);
+    border: 1.5px solid rgba(0,200,117,0.25);
+    border-radius: var(--radius-sm);
+    padding: 1.25rem;
+    animation: fadeInUp 0.4s ease;
+}
+.result-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+.result-emoji { font-size: 2rem; }
+.result-message { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--blue-dark); }
+.result-rewards { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+.reward-chip {
+    background: white; border: 1.5px solid var(--border);
+    border-radius: 20px; padding: 0.3rem 0.9rem;
+    font-size: 0.85rem; font-weight: 700; color: var(--text-primary);
+}
+.result-explanation { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem; }
+.result-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+/* Scenario nav dots */
+.scenario-nav { display: flex; justify-content: center; gap: 0.5rem; padding: 0.75rem; }
+.scenario-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--border); cursor: pointer; transition: all var(--transition);
+}
+.scenario-dot.active { background: var(--green); transform: scale(1.3); }
+.scenario-dot.done   { background: var(--teal); }
+
+/* Tips sidebar */
+.scenario-tips {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    height: fit-content;
+    position: sticky; top: 1rem;
+}
+.scenario-tips h4 { font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700; color: var(--blue-dark); margin-bottom: 0.75rem; }
+.tip-item { padding: 0.65rem 0; border-bottom: 1px solid var(--border); }
+.tip-item:last-child { border-bottom: none; padding-bottom: 0; }
+.tip-item strong { display: block; font-size: 0.82rem; color: var(--blue-dark); margin-bottom: 0.2rem; }
+.tip-item p { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; }
+
+/* ─── Responsive ──────────────────────────────────────────── */
+@media (max-width: 960px) {
+    .scenario-wrap { grid-template-columns: 1fr; }
+}

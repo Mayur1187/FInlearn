@@ -1,0 +1,88 @@
+/* ============================================================
+   FinLiteracy – Learning Path Page Styles
+   Used by: learning_path.html
+   ============================================================ */
+
+/* ─── Overall Progress ────────────────────────────────────── */
+.overall-progress-card { display: flex; align-items: center; justify-content: space-between; gap: 2rem; margin-bottom: 2rem; }
+.op-left h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; }
+.op-left p { font-size: 0.88rem; color: var(--text-secondary); }
+.op-right { display: flex; align-items: center; gap: 1rem; flex: 1; max-width: 400px; }
+.big-progress-track { flex: 1; background: var(--off-white); border-radius: 20px; height: 16px; overflow: hidden; }
+.big-progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--cyan)); border-radius: 20px; transition: width 1.2s ease; }
+.op-percent { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--green-dark); white-space: nowrap; }
+
+/* ─── Learning Path Tree ──────────────────────────────────── */
+.learning-path { display: flex; flex-direction: column; gap: 0; }
+.path-connector { width: 2px; height: 24px; background: linear-gradient(to bottom, var(--green), var(--border)); margin-left: 28px; }
+.connector-locked { background: var(--border); }
+
+.level-card {
+    display: flex; gap: 1.25rem;
+    background: white; border: 1.5px solid var(--border);
+    border-radius: var(--radius); padding: 1.5rem;
+    box-shadow: var(--shadow-sm); transition: transform var(--transition);
+}
+.level-card:hover { transform: translateX(4px); }
+.level-locked { opacity: 0.6; }
+.level-locked:hover { transform: none; }
+.level-final { border-color: #ffd700; background: linear-gradient(135deg, #fffef0, #fff8e0); }
+
+.level-status { display: flex; flex-direction: column; align-items: center; padding-top: 0.25rem; }
+.level-dot {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+}
+.dot-complete { background: linear-gradient(135deg, var(--green), var(--cyan)); color: white; box-shadow: 0 4px 12px rgba(0,200,117,0.4); }
+.dot-active { background: linear-gradient(135deg, var(--blue-light), var(--cyan)); color: white; box-shadow: 0 4px 12px rgba(26,64,128,0.3); }
+.dot-locked { background: var(--border); color: var(--text-muted); font-size: 1rem; }
+
+.level-content { flex: 1; }
+.level-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+.level-icon { font-size: 1.6rem; }
+.level-title-wrap { flex: 1; }
+.level-num { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.level-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--blue-dark); }
+.level-badge { border-radius: 20px; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+.badge-complete { background: #e8fff5; color: var(--green-dark); }
+.badge-active { background: #e8f4ff; color: var(--blue-light); }
+.badge-locked { background: var(--off-white); color: var(--text-muted); }
+.badge-gold { background: #fff8e0; color: #b8860b; }
+
+.level-desc { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 0.9rem; }
+.level-topics { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.9rem; }
+.topic-chip { padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.78rem; font-weight: 500; }
+.topic-chip.done   { background: #e8fff5; color: var(--green-dark); }
+.topic-chip.active { background: #e8f4ff; color: var(--blue-light); }
+.topic-chip.locked { background: var(--off-white); color: var(--text-muted); }
+
+.level-progress-mini { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.9rem; font-size: 0.8rem; color: var(--text-muted); }
+.mini-track { flex: 1; max-width: 200px; background: var(--off-white); height: 8px; border-radius: 20px; overflow: hidden; }
+.mini-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--cyan)); border-radius: 20px; }
+.level-footer { display: flex; align-items: center; justify-content: space-between; }
+.level-xp { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); }
+.unlock-hint { font-size: 0.82rem; color: var(--text-muted); font-style: italic; }
+
+/* ─── Recommendation Cards ────────────────────────────────── */
+.recommendation-section { margin-top: 2rem; }
+.recommendation-section h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--blue-dark); margin-bottom: 0.75rem; }
+.rec-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.rec-card {
+    background: white; border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 1.1rem;
+    transition: all var(--transition);
+}
+.rec-card:hover { border-color: var(--blue-light); transform: translateY(-2px); box-shadow: var(--shadow); }
+.rec-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+.rec-title { font-size: 0.88rem; font-weight: 700; color: var(--blue-dark); margin-bottom: 0.25rem; }
+.rec-desc { font-size: 0.78rem; color: var(--text-secondary); }
+
+/* ─── Responsive ──────────────────────────────────────────── */
+@media (max-width: 960px) {
+    .overall-progress-card { flex-direction: column; align-items: flex-start; }
+    .rec-cards { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+    .rec-cards { grid-template-columns: 1fr; }
+}

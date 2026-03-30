@@ -1,0 +1,97 @@
+/* ============================================================
+   FinLiteracy – Investment Simulator Page Styles
+   Used by: investment_simulator.html
+   ============================================================ */
+
+.invest-layout { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; }
+.portfolio-summary {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;
+}
+.portfolio-card {
+    background: white; border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 1.1rem 1.25rem;
+    text-align: center;
+}
+.portfolio-value { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--blue-dark); display: block; }
+.portfolio-label { font-size: 0.78rem; color: var(--text-muted); }
+.portfolio-positive { color: var(--green-dark) !important; }
+.portfolio-negative { color: var(--red) !important; }
+
+.asset-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.asset-card {
+    background: white; border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 1.25rem;
+    cursor: pointer; transition: all var(--transition);
+    position: relative; overflow: hidden;
+}
+.asset-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--asset-color, var(--green));
+}
+.asset-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--asset-color, var(--green)); }
+.asset-card.selected { border-color: var(--asset-color, var(--green)); background: linear-gradient(135deg, rgba(0,200,117,0.04), white); }
+.asset-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.asset-icon-wrap { display: flex; align-items: center; gap: 0.6rem; }
+.asset-icon { font-size: 1.5rem; }
+.asset-name { font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--blue-dark); }
+.asset-risk { font-size: 0.72rem; padding: 0.2rem 0.6rem; border-radius: 20px; font-weight: 600; }
+.risk-low    { background: #e8fff5; color: var(--green-dark); }
+.risk-medium { background: #fff5e8; color: var(--orange); }
+.risk-high   { background: #ffe8e8; color: var(--red); }
+.risk-very-low  { background: #e8fff5; color: var(--green-dark); }
+.risk-very-high { background: #ffe0e0; color: #b30000; }
+.asset-desc { font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.75rem; }
+.asset-return-range { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); }
+
+.invest-form { margin-top: 1.5rem; padding: 1.5rem; background: white; border: 1.5px solid var(--border); border-radius: var(--radius); }
+.invest-form h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--blue-dark); margin-bottom: 1rem; }
+.amount-input-wrap { position: relative; margin-bottom: 1rem; }
+.amount-prefix {
+    position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);
+    font-weight: 700; color: var(--text-secondary); font-size: 1rem;
+}
+.amount-input {
+    width: 100%; padding: 0.8rem 1rem 0.8rem 2.25rem;
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700;
+    color: var(--blue-dark); outline: none; transition: border-color 0.2s;
+}
+.amount-input:focus { border-color: var(--green); }
+.amount-presets { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.preset-btn {
+    padding: 0.3rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; border: 1.5px solid var(--border); background: var(--off-white);
+    color: var(--text-secondary); transition: all var(--transition);
+}
+.preset-btn:hover { border-color: var(--green); color: var(--green); }
+
+.invest-result {
+    margin-top: 1rem; padding: 1rem;
+    background: linear-gradient(135deg, #f0fff8, #f0faff);
+    border: 1.5px solid rgba(0,200,117,0.25);
+    border-radius: var(--radius-sm); display: none;
+    animation: fadeInUp 0.3s ease;
+}
+.invest-result.show { display: block; }
+.result-return { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; }
+.return-positive { color: var(--green-dark); }
+.return-negative { color: var(--red); }
+
+/* Portfolio chart sidebar */
+.portfolio-holdings { display: flex; flex-direction: column; gap: 0.75rem; }
+.holding-row { display: flex; align-items: center; gap: 0.75rem; }
+.holding-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.holding-name { font-size: 0.85rem; font-weight: 600; flex: 1; }
+.holding-amount { font-size: 0.82rem; color: var(--text-secondary); }
+.holding-return { font-size: 0.8rem; font-weight: 700; }
+.holding-positive { color: var(--green-dark); }
+.holding-negative { color: var(--red); }
+
+/* ─── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1100px) {
+    .invest-layout { grid-template-columns: 1fr; }
+    .asset-cards { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+    .asset-cards { grid-template-columns: 1fr; }
+}

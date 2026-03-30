@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard – FinLiteracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/leaderboard.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon-sm">₹</div>
+        <span>FinLiteracy</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard"    class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+        <a href="/scenario"     class="nav-item"><span class="nav-icon">🎮</span> Scenarios</a>
+        <a href="/learning"     class="nav-item"><span class="nav-icon">📚</span> Learning Path</a>
+        <a href="/invest"       class="nav-item"><span class="nav-icon">📈</span> Invest</a>
+        <a href="/mentor"       class="nav-item"><span class="nav-icon">🤖</span> AI Mentor</a>
+        <a href="/leaderboard"  class="nav-item active"><span class="nav-icon">🏅</span> Leaderboard</a>
+        <a href="/achievements" class="nav-item"><span class="nav-icon">🏆</span> Achievements</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="streak-badge">🔥 {{ user.streak_days }} day streak</div>
+        <a href="/logout" class="nav-item nav-logout"><span class="nav-icon">👋</span> Logout</a>
+    </div>
+</aside>
+
+<main class="main-content">
+    <header class="page-header">
+        <div>
+            <h2 class="page-title">🏅 Leaderboard</h2>
+            <p class="page-subtitle">Top learners this week. Keep earning XP to climb the ranks!</p>
+        </div>
+        <div class="header-coins">
+            <span class="coin-display">🪙 {{ user.coins }} coins</span>
+        </div>
+    </header>
+
+    <!-- My Rank Card -->
+    <div class="lb-my-rank" style="margin-bottom:1.5rem;">
+        <div class="lb-my-rank-num">#{{ my_rank }}</div>
+        <div class="lb-my-rank-label">Your Current Rank — {{ user.xp }} XP · Level {{ user.level }}</div>
+        <div style="margin-top:0.75rem;">
+            <a href="/scenario" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.25);">
+                Play Scenarios to Climb 🚀
+            </a>
+        </div>
+    </div>
+
+    <!-- Top 3 Podium -->
+    <div style="display:flex;justify-content:center;align-items:flex-end;gap:1rem;margin-bottom:2rem;">
+        {% if top_users | length >= 2 %}
+        <div style="text-align:center;animation:fadeInUp 0.4s ease 0.15s both;">
+            <div style="font-size:2rem;">🥈</div>
+            <div style="width:80px;height:90px;background:linear-gradient(135deg,#e8e8e8,#c8c8c8);border-radius:10px 10px 0 0;
+                        display:flex;align-items:center;justify-content:center;flex-direction:column;margin:0.5rem auto 0;">
+                <div style="font-size:1.5rem;">👤</div>
+                <div style="font-size:0.72rem;font-weight:700;color:#555;margin-top:0.2rem;">{{ top_users[1].username[:8] }}</div>
+            </div>
+            <div style="font-size:0.78rem;font-weight:700;color:var(--text-secondary);background:var(--off-white);padding:0.25rem 0.5rem;border-radius:0 0 6px 6px;">{{ top_users[1].xp }} XP</div>
+        </div>
+        {% endif %}
+
+        {% if top_users | length >= 1 %}
+        <div style="text-align:center;animation:fadeInUp 0.4s ease both;">
+            <div style="font-size:2.5rem;">🥇</div>
+            <div style="width:90px;height:110px;background:linear-gradient(135deg,#ffd700,#f5a800);border-radius:10px 10px 0 0;
+                        display:flex;align-items:center;justify-content:center;flex-direction:column;margin:0.5rem auto 0;
+                        box-shadow:0 4px 20px rgba(245,200,66,0.4);">
+                <div style="font-size:1.8rem;">👑</div>
+                <div style="font-size:0.78rem;font-weight:800;color:white;margin-top:0.2rem;">{{ top_users[0].username[:8] }}</div>
+            </div>
+            <div style="font-size:0.82rem;font-weight:700;color:var(--gold);background:#fff8e0;padding:0.25rem 0.5rem;border-radius:0 0 6px 6px;">{{ top_users[0].xp }} XP</div>
+        </div>
+        {% endif %}
+
+        {% if top_users | length >= 3 %}
+        <div style="text-align:center;animation:fadeInUp 0.4s ease 0.25s both;">
+            <div style="font-size:2rem;">🥉</div>
+            <div style="width:80px;height:75px;background:linear-gradient(135deg,#e8d0c0,#cd7f32);border-radius:10px 10px 0 0;
+                        display:flex;align-items:center;justify-content:center;flex-direction:column;margin:0.5rem auto 0;">
+                <div style="font-size:1.5rem;">👤</div>
+                <div style="font-size:0.72rem;font-weight:700;color:white;margin-top:0.2rem;">{{ top_users[2].username[:8] }}</div>
+            </div>
+            <div style="font-size:0.78rem;font-weight:700;color:#cd7f32;background:#fff0e8;padding:0.25rem 0.5rem;border-radius:0 0 6px 6px;">{{ top_users[2].xp }} XP</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Full Table -->
+    <div class="leaderboard-page-card">
+        <table class="lb-table">
+            <thead>
+                <tr>
+                    <th style="width:60px;">Rank</th>
+                    <th>Player</th>
+                    <th>XP</th>
+                    <th>Level</th>
+                    <th>Coins</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in top_users %}
+                <tr class="{{ 'current-user' if u.id == user.id else '' }}">
+                    <td class="lb-rank-cell">
+                        {% if loop.index == 1 %}🥇
+                        {% elif loop.index == 2 %}🥈
+                        {% elif loop.index == 3 %}🥉
+                        {% else %}<span style="color:var(--text-muted);font-size:0.9rem;">{{ loop.index }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="lb-user-cell">
+                            <div class="lb-avatar">{{ u.username[0] | upper }}</div>
+                            <div>
+                                <div class="lb-username">{{ u.username }}{% if u.id == user.id %} <span style="font-size:0.72rem;color:var(--green-dark);font-weight:600;">(you)</span>{% endif %}</div>
+                                <div style="font-size:0.72rem;color:var(--text-muted);">Streak: {{ u.streak_days }}🔥</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="lb-xp-cell">{{ u.xp | int }} XP</td>
+                    <td>
+                        <span class="lb-level-pill">Lv. {{ u.level }}</span>
+                    </td>
+                    <td style="font-size:0.85rem;color:var(--text-secondary);">🪙 {{ u.coins }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <p style="text-align:center;margin-top:1.5rem;font-size:0.82rem;color:var(--text-muted);">
+        Leaderboard resets weekly. Play more scenarios to earn XP and climb the ranks! 🚀
+    </p>
+</main>
+
+
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invest Learning – FinLiteracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/invest_learn.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon-sm">₹</div>
+        <span>FinLiteracy</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard"    class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+        <a href="/scenario"     class="nav-item"><span class="nav-icon">🎮</span> Scenarios</a>
+        <a href="/learning"     class="nav-item"><span class="nav-icon">📚</span> Learning Path</a>
+        <a href="/invest-learn" class="nav-item active"><span class="nav-icon">📈</span> Invest</a>
+        <a href="/mentor"       class="nav-item"><span class="nav-icon">🤖</span> AI Mentor</a>
+        <a href="/leaderboard"  class="nav-item"><span class="nav-icon">🏅</span> Leaderboard</a>
+        <a href="/achievements" class="nav-item"><span class="nav-icon">🏆</span> Achievements</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="streak-badge">🔥 {{ user.streak_days }} day streak</div>
+        <a href="/logout" class="nav-item nav-logout"><span class="nav-icon">👋</span> Logout</a>
+    </div>
+</aside>
+
+<main class="main-content">
+    <header class="page-header">
+        <div>
+            <h2 class="page-title">📈 Invest &amp; Grow</h2>
+            <p class="page-subtitle">Master the art of investing — from basics to beginner strategy.</p>
+        </div>
+        <div class="header-coins">
+            <span class="coin-display">⚡ {{ user.xp }} XP</span>
+        </div>
+    </header>
+
+    <!-- Progress banner -->
+    {% set total = 4 %}
+    {% set done  = completed | length %}
+    <div class="il-progress-banner card">
+        <div class="ilpb-left">
+            <div class="ilpb-icon">🎓</div>
+            <div>
+                <div class="ilpb-title">Your Investing Journey</div>
+                <div class="ilpb-sub">{{ done }} of {{ total }} lessons completed · +75 XP each</div>
+            </div>
+        </div>
+        <div class="ilpb-right">
+            <div class="ilpb-track">
+                <div class="ilpb-fill" style="width: {{ (done / total * 100) | round | int }}%"></div>
+            </div>
+            <span class="ilpb-pct">{{ (done / total * 100) | round | int }}%</span>
+        </div>
+    </div>
+
+    <!-- Lesson Cards Grid -->
+    <div class="il-lessons-grid">
+
+        <!-- Lesson 1 -->
+        {% set slug = 'what_is_investing' %}
+        {% set score = completed.get(slug) %}
+        <div class="il-lesson-card {% if score is not none %}il-done{% endif %}">
+            <div class="il-card-top">
+                <div class="il-icon-wrap il-blue">💡</div>
+                {% if score is not none %}
+                <span class="il-badge il-badge-done">✅ Completed · {{ score }}%</span>
+                {% else %}
+                <span class="il-badge il-badge-open">📖 Start</span>
+                {% endif %}
+            </div>
+            <h3 class="il-card-title">What is Investing?</h3>
+            <p class="il-card-desc">Understand why investing beats saving alone, how compounding works, and why starting early is a superpower.</p>
+            <ul class="il-topics">
+                <li>💰 Money today vs money tomorrow</li>
+                <li>📈 Power of compounding</li>
+                <li>⏰ Time is your biggest asset</li>
+            </ul>
+            <a href="/invest-learn/what_is_investing" class="btn btn-primary btn-sm il-cta">
+                {{ 'Revisit Lesson →' if score is not none else 'Start Lesson →' }}
+            </a>
+        </div>
+
+        <!-- Lesson 2 -->
+        {% set slug = 'types_of_investments' %}
+        {% set score = completed.get(slug) %}
+        <div class="il-lesson-card {% if score is not none %}il-done{% endif %}">
+            <div class="il-card-top">
+                <div class="il-icon-wrap il-green">🌐</div>
+                {% if score is not none %}
+                <span class="il-badge il-badge-done">✅ Completed · {{ score }}%</span>
+                {% else %}
+                <span class="il-badge il-badge-open">📖 Start</span>
+                {% endif %}
+            </div>
+            <h3 class="il-card-title">Types of Investments</h3>
+            <p class="il-card-desc">Explore every major asset class — stocks, mutual funds, SIPs, bonds, and FDs — and what makes each unique.</p>
+            <ul class="il-topics">
+                <li>📊 Stocks &amp; Equity</li>
+                <li>🌐 Mutual Funds &amp; SIP</li>
+                <li>🏦 Bonds &amp; Fixed Deposits</li>
+            </ul>
+            <a href="/invest-learn/types_of_investments" class="btn btn-primary btn-sm il-cta">
+                {{ 'Revisit Lesson →' if score is not none else 'Start Lesson →' }}
+            </a>
+        </div>
+
+        <!-- Lesson 3 -->
+        {% set slug = 'risk_vs_return' %}
+        {% set score = completed.get(slug) %}
+        <div class="il-lesson-card {% if score is not none %}il-done{% endif %}">
+            <div class="il-card-top">
+                <div class="il-icon-wrap il-orange">⚖️</div>
+                {% if score is not none %}
+                <span class="il-badge il-badge-done">✅ Completed · {{ score }}%</span>
+                {% else %}
+                <span class="il-badge il-badge-open">📖 Start</span>
+                {% endif %}
+            </div>
+            <h3 class="il-card-title">Risk vs Return</h3>
+            <p class="il-card-desc">Every investment has a risk-return tradeoff. Learn to measure risk, manage volatility, and choose wisely.</p>
+            <ul class="il-topics">
+                <li>🎲 Understanding risk types</li>
+                <li>📉 Volatility &amp; drawdowns</li>
+                <li>🛡️ Diversification as armour</li>
+            </ul>
+            <a href="/invest-learn/risk_vs_return" class="btn btn-primary btn-sm il-cta">
+                {{ 'Revisit Lesson →' if score is not none else 'Start Lesson →' }}
+            </a>
+        </div>
+
+        <!-- Lesson 4 -->
+        {% set slug = 'beginner_strategy' %}
+        {% set score = completed.get(slug) %}
+        <div class="il-lesson-card {% if score is not none %}il-done{% endif %}">
+            <div class="il-card-top">
+                <div class="il-icon-wrap il-teal">🚀</div>
+                {% if score is not none %}
+                <span class="il-badge il-badge-done">✅ Completed · {{ score }}%</span>
+                {% else %}
+                <span class="il-badge il-badge-open">📖 Start</span>
+                {% endif %}
+            </div>
+            <h3 class="il-card-title">Beginner Strategy</h3>
+            <p class="il-card-desc">A step-by-step action plan for your first investments: emergency fund, SIP setup, index funds, and portfolio review.</p>
+            <ul class="il-topics">
+                <li>🏦 Emergency fund first</li>
+                <li>🔁 Automate with SIPs</li>
+                <li>📆 Review &amp; rebalance</li>
+            </ul>
+            <a href="/invest-learn/beginner_strategy" class="btn btn-primary btn-sm il-cta">
+                {{ 'Revisit Lesson →' if score is not none else 'Start Lesson →' }}
+            </a>
+        </div>
+
+    </div>
+
+    <!-- Quick stats row -->
+    <div class="il-stats-row">
+        <div class="il-stat-card">
+            <div class="il-stat-icon">🏆</div>
+            <div class="il-stat-val">{{ done }}/4</div>
+            <div class="il-stat-label">Lessons Done</div>
+        </div>
+        <div class="il-stat-card">
+            <div class="il-stat-icon">⚡</div>
+            <div class="il-stat-val">{{ done * 75 }}</div>
+            <div class="il-stat-label">XP Earned</div>
+        </div>
+        <div class="il-stat-card">
+            <div class="il-stat-icon">🎯</div>
+            <div class="il-stat-val">
+                {% if completed %}
+                    {{ (completed.values() | list | sum / completed | length) | round | int }}%
+                {% else %}—{% endif %}
+            </div>
+            <div class="il-stat-label">Avg Quiz Score</div>
+        </div>
+        <div class="il-stat-card">
+            <div class="il-stat-icon">🤖</div>
+            <div class="il-stat-val"><a href="/mentor" style="color:var(--green-dark)">Ask AI</a></div>
+            <div class="il-stat-label">Got questions?</div>
+        </div>
+    </div>
+
+</main>
+</body>
+</html>

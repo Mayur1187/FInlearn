@@ -1,0 +1,11 @@
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.23
+Werkzeug==3.0.1
+requests==2.31.0
+
+# ── Optional: Groq (LLaMA 3) – recommended ──
+# groq==0.9.0   # only needed if calling Groq SDK directly; we use requests
+
+# ── No extra OAuth library needed ──
+# We implement OAuth 2.0 with standard 'requests' calls (no Flask-Dance required)

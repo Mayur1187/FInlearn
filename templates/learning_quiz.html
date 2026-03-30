@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ level.title }} Quiz – FinLiteracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/learning_path.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon-sm">₹</div><span>FinLiteracy</span></div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard"    class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+        <a href="/scenario"     class="nav-item"><span class="nav-icon">🎮</span> Scenarios</a>
+        <a href="/learning"     class="nav-item active"><span class="nav-icon">📚</span> Learning Path</a>
+        <a href="/invest"       class="nav-item"><span class="nav-icon">📈</span> Invest</a>
+        <a href="/mentor"       class="nav-item"><span class="nav-icon">🤖</span> AI Mentor</a>
+        <a href="/leaderboard"  class="nav-item"><span class="nav-icon">🏅</span> Leaderboard</a>
+        <a href="/achievements" class="nav-item"><span class="nav-icon">🏆</span> Achievements</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="streak-badge">🔥 {{ user.streak_days }} day streak</div>
+        <a href="/logout" class="nav-item nav-logout"><span class="nav-icon">👋</span> Logout</a>
+    </div>
+</aside>
+
+<main class="main-content quiz-main">
+    <div class="breadcrumb">
+        <a href="/learning">Learning Path</a> /
+        <a href="/learning/{{ level.slug }}">{{ level.title }}</a> /
+        <span>Quiz</span>
+    </div>
+
+    <!-- Quiz intro (shown before starting) -->
+    <div id="quiz-intro" class="quiz-intro-card">
+        <div class="qi-icon">📝</div>
+        <h1 class="qi-title">{{ level.icon }} {{ level.title }} Quiz</h1>
+        <p class="qi-desc">Test your knowledge across all {{ level.topics | length }} topics in this level.</p>
+        <div class="qi-stats">
+            <div class="qi-stat"><span>❓</span><strong>{{ questions | length }}</strong><span>Questions</span></div>
+            <div class="qi-stat"><span>🎯</span><strong>70%</strong><span>Pass mark</span></div>
+            <div class="qi-stat"><span>🎓</span><strong>1</strong><span>Certificate</span></div>
+            <div class="qi-stat"><span>⚡</span><strong>{{ level.xp_reward + 100 }}</strong><span>XP reward</span></div>
+        </div>
+        {% if previous_result %}
+        <div class="qi-prev">
+            Previous best: <strong class="{{ 'score-pass' if previous_result.passed else 'score-fail' }}">{{ previous_result.score }}%</strong>
+            {% if previous_result.passed %}— You already passed! Retake to review.{% else %}— Try again!{% endif %}
+        </div>
+        {% endif %}
+        <button class="btn btn-primary btn-lg" onclick="startQuiz()">Start Quiz →</button>
+        {% if previous_result and previous_result.passed %}
+        <a href="/learning/{{ level.slug }}/certificate" class="btn btn-cert" style="margin-top:0.75rem;display:block;text-align:center;">🎓 Download Certificate</a>
+        {% endif %}
+    </div>
+
+    <!-- Quiz questions (hidden until start) -->
+    <div id="quiz-body" class="hidden">
+        <!-- Progress -->
+        <div class="quiz-progress-bar">
+            <div class="qpb-fill" id="qpb-fill" style="width:0%"></div>
+        </div>
+        <div class="quiz-q-counter" id="q-counter">Question 1 / {{ questions | length }}</div>
+
+        <!-- Question cards -->
+        {% for q in questions %}
+        <div class="q-card {{ 'q-visible' if loop.first else 'q-hidden' }}" id="q-{{ loop.index0 }}">
+            <div class="q-number">Question {{ loop.index }}</div>
+            <div class="q-text">{{ q.q }}</div>
+            <div class="q-options">
+                {% for key, val in q.options.items() %}
+                <button class="q-opt" data-q="{{ loop.index0 }}" data-opt="{{ key }}"
+                        onclick="selectOption({{ loop.index0 }}, '{{ key }}', this)">
+                    <span class="opt-label">{{ key }}</span>
+                    <span class="opt-text">{{ val }}</span>
+                </button>
+                {% endfor %}
+            </div>
+            <div class="q-nav">
+                {% if not loop.first %}
+                <button class="btn btn-outline btn-sm" onclick="goQ({{ loop.index0 - 1 }})">← Prev</button>
+                {% else %}
+                <span></span>
+                {% endif %}
+                {% if not loop.last %}
+                <button class="btn btn-primary btn-sm" onclick="goQ({{ loop.index0 + 1 }})" id="qnext-{{ loop.index0 }}">Next →</button>
+                {% else %}
+                <button class="btn btn-primary btn-sm" onclick="submitQuiz()" id="submit-btn">Submit Quiz ✓</button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Results panel (hidden until submitted) -->
+    <div id="quiz-results" class="hidden">
+        <div class="result-header" id="result-header">
+            <!-- filled by JS -->
+        </div>
+        <div id="result-breakdown"></div>
+        <div class="result-actions" id="result-actions"></div>
+    </div>
+</main>
+
+<script>
+const LEVEL_SLUG  = {{ level.slug | tojson }};
+const TOTAL_Q     = {{ questions | length }};
+const answers     = {};    // {0: 'A', 1: 'C', ...}
+let   currentQ    = 0;
+
+function startQuiz() {
+    document.getElementById('quiz-intro').classList.add('hidden');
+    document.getElementById('quiz-body').classList.remove('hidden');
+    updateProgress();
+}
+
+function updateProgress() {
+    const pct = ((currentQ + 1) / TOTAL_Q * 100).toFixed(0);
+    document.getElementById('qpb-fill').style.width = pct + '%';
+    document.getElementById('q-counter').textContent = `Question ${currentQ + 1} / ${TOTAL_Q}`;
+}
+
+function goQ(idx) {
+    document.getElementById('q-' + currentQ).classList.remove('q-visible');
+    document.getElementById('q-' + currentQ).classList.add('q-hidden');
+    currentQ = idx;
+    document.getElementById('q-' + currentQ).classList.remove('q-hidden');
+    document.getElementById('q-' + currentQ).classList.add('q-visible');
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function selectOption(qIdx, optKey, btn) {
+    // Deselect all options for this question
+    document.querySelectorAll(`.q-opt[data-q="${qIdx}"]`).forEach(b => b.classList.remove('q-opt-selected'));
+    // Select clicked
+    btn.classList.add('q-opt-selected');
+    answers[qIdx] = optKey;
+}
+
+async function submitQuiz() {
+    // Check all answered
+    const unanswered = [];
+    for (let i = 0; i < TOTAL_Q; i++) {
+        if (!answers[i]) unanswered.push(i + 1);
+    }
+    if (unanswered.length > 0) {
+        if (!confirm(`You haven't answered questions: ${unanswered.join(', ')}. Submit anyway?`)) return;
+    }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    try {
+        const resp = await fetch(`/learning/${LEVEL_SLUG}/quiz/submit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ answers }),
+        });
+        const data = await resp.json();
+        showResults(data);
+    } catch(err) {
+        btn.disabled = false;
+        btn.textContent = 'Submit Quiz ✓';
+        alert('Error submitting quiz. Please try again.');
+    }
+}
+
+function showResults(data) {
+    document.getElementById('quiz-body').classList.add('hidden');
+    const panel = document.getElementById('quiz-results');
+    panel.classList.remove('hidden');
+
+    const passed = data.passed;
+    const score  = data.score;
+
+    // Header
+    document.getElementById('result-header').innerHTML = `
+        <div class="rh-icon">${passed ? '🎉' : '📚'}</div>
+        <div class="rh-score ${passed ? 'score-pass' : 'score-fail'}">${score}%</div>
+        <div class="rh-label">${passed ? 'Congratulations — You Passed!' : 'Keep Practising — You Need 70%'}</div>
+        <div class="rh-detail">${data.correct} correct out of ${data.total} questions</div>
+        <div class="score-bar-wrap">
+            <div class="score-bar"><div class="score-bar-fill ${passed ? 'fill-pass' : 'fill-fail'}" style="width:${score}%"></div></div>
+            <span class="score-bar-label">${score}%</span>
+        </div>
+    `;
+
+    // Breakdown
+    let breakdownHTML = '<div class="breakdown-title">📋 Answer Review</div>';
+    data.results.forEach((r, i) => {
+        breakdownHTML += `
+        <div class="breakdown-item ${r.is_correct ? 'bi-correct' : 'bi-wrong'}">
+            <div class="bi-q"><span class="bi-num">Q${i+1}</span> ${r.question}</div>
+            <div class="bi-answers">
+                <span class="${r.is_correct ? 'ans-correct' : 'ans-wrong'}">
+                    Your answer: <strong>${r.your_answer || 'No answer'}</strong> ${r.is_correct ? '✓' : '✗'}
+                </span>
+                ${!r.is_correct ? `<span class="ans-correct">Correct: <strong>${r.correct}</strong></span>` : ''}
+            </div>
+            <div class="bi-explanation">💡 ${r.explanation}</div>
+        </div>`;
+    });
+    document.getElementById('result-breakdown').innerHTML = breakdownHTML;
+
+    // Actions
+    let actionsHTML = `<a href="/learning/${LEVEL_SLUG}" class="btn btn-outline">← Back to Level</a>`;
+    if (passed) {
+        actionsHTML += `<a href="/learning/${LEVEL_SLUG}/certificate" class="btn btn-cert">🎓 Download Certificate</a>`;
+        actionsHTML += `<a href="/learning" class="btn btn-primary">Continue Learning →</a>`;
+    } else {
+        actionsHTML += `<button class="btn btn-primary" onclick="location.reload()">Retake Quiz</button>`;
+    }
+    document.getElementById('result-actions').innerHTML = actionsHTML;
+}
+</script>
+</body>
+</html>

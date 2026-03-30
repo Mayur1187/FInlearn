@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invest Lesson – FinLiteracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/invest_learn.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon-sm">₹</div>
+        <span>FinLiteracy</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard"    class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+        <a href="/scenario"     class="nav-item"><span class="nav-icon">🎮</span> Scenarios</a>
+        <a href="/learning"     class="nav-item"><span class="nav-icon">📚</span> Learning Path</a>
+        <a href="/invest-learn" class="nav-item active"><span class="nav-icon">📈</span> Invest</a>
+        <a href="/mentor"       class="nav-item"><span class="nav-icon">🤖</span> AI Mentor</a>
+        <a href="/leaderboard"  class="nav-item"><span class="nav-icon">🏅</span> Leaderboard</a>
+        <a href="/achievements" class="nav-item"><span class="nav-icon">🏆</span> Achievements</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="streak-badge">🔥 {{ user.streak_days }} day streak</div>
+        <a href="/logout" class="nav-item nav-logout"><span class="nav-icon">👋</span> Logout</a>
+    </div>
+</aside>
+
+<main class="main-content">
+
+    <!-- ── Back breadcrumb ── -->
+    <div class="il-breadcrumb">
+        <a href="/invest-learn">← Invest Learning</a>
+        <span>/</span>
+        <span>{{ lesson | replace('_', ' ') | title }}</span>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         LESSON: WHAT IS INVESTING
+    ═══════════════════════════════════════════════════════════ -->
+    {% if lesson == 'what_is_investing' %}
+    <div class="il-lesson-wrap" id="lesson-content">
+        <div class="il-lesson-header">
+            <div class="il-icon-wrap il-blue il-icon-lg">💡</div>
+            <div>
+                <h2 class="page-title">What is Investing?</h2>
+                <p class="page-subtitle">Lesson 1 of 4 · ~5 min read</p>
+            </div>
+        </div>
+
+        <div class="il-content-card card">
+            <div class="il-section">
+                <h3>💰 Saving vs Investing</h3>
+                <p>Saving means putting money aside for future use — usually in a bank account or FD. Investing means putting money to <strong>work</strong> so it grows faster than inflation.</p>
+                <div class="il-callout il-callout-green">
+                    ₹10,000 in a savings account at 3.5% for 20 years = <strong>₹19,898</strong><br>
+                    ₹10,000 in an index mutual fund at 12% for 20 years = <strong>₹96,462</strong> 🚀
+                </div>
+            </div>
+
+            <div class="il-section">
+                <h3>📈 The Power of Compounding</h3>
+                <p>Compounding means earning returns <em>on your returns</em>. Albert Einstein reportedly called it the "8th wonder of the world."</p>
+                <div class="il-cards-mini">
+                    <div class="il-mini-card">
+                        <div class="il-mini-icon">⏰</div>
+                        <strong>Start at 20</strong>
+                        <p>₹2,000/month for 40 years = <span class="il-highlight">₹1.17 crore</span></p>
+                    </div>
+                    <div class="il-mini-card">
+                        <div class="il-mini-icon">⌛</div>
+                        <strong>Start at 30</strong>
+                        <p>₹2,000/month for 30 years = <span class="il-highlight">₹35 lakhs</span></p>
+                    </div>
+                    <div class="il-mini-card">
+                        <div class="il-mini-icon">🐢</div>
+                        <strong>Start at 40</strong>
+                        <p>₹2,000/month for 20 years = <span class="il-highlight">₹9.7 lakhs</span></p>
+                    </div>
+                </div>
+                <p class="il-note">Assumed 12% annual return (Nifty 50 historical average). The 10-year difference between starting at 20 vs 30 gives you <strong>3× more wealth!</strong></p>
+            </div>
+
+            <div class="il-section">
+                <h3>⏰ Time is Your Biggest Asset</h3>
+                <p>You don't need a lot of money to start — you need <strong>time</strong>. Even ₹500/month invested consistently from age 22 will outperform ₹5,000/month started at age 35.</p>
+                <div class="il-callout il-callout-blue">
+                    💡 <strong>Key Takeaway:</strong> The best time to start investing was yesterday. The second best time is <em>today</em>.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz -->
+    <div class="il-quiz-wrap" id="quiz-section">
+        <h3 class="il-quiz-title">🎯 Quick Quiz — What is Investing?</h3>
+        <p class="il-quiz-sub">Answer all questions to earn XP and mark this lesson complete.</p>
+
+        <div class="il-questions">
+            <div class="il-question" data-q="0">
+                <p class="il-q-text">1. What does compounding mean?</p>
+                <div class="il-options">
+                    <button class="il-opt" data-correct="false">Earning interest only on your principal</button>
+                    <button class="il-opt" data-correct="true">Earning returns on your original investment AND past returns</button>
+                    <button class="il-opt" data-correct="false">A government savings scheme</button>
+                    <button class="il-opt" data-correct="false">A type of fixed deposit</button>
+                </div>
+            </div>
+            <div class="il-question" data-q="1">
+                <p class="il-q-text">2. ₹10,000 invested at 12% for 20 years (compounding annually) grows to approximately:</p>
+                <div class="il-options">
+                    <button class="il-opt" data-correct="false">₹24,000</button>
+                    <button class="il-opt" data-correct="false">₹45,000</button>
+                    <button class="il-opt" data-correct="true">₹96,000+</button>
+                    <button class="il-opt" data-correct="false">₹1,20,000</button>
+                </div>
+            </div>
+            <div class="il-question" data-q="2">
+                <p class="il-q-text">3. The main risk of ONLY saving (not investing) is:</p>
+                <div class="il-options">
+                    <button class="il-opt" data-correct="false">You might lose your principal</button>
+                    <button class="il-opt" data-correct="true">Inflation erodes your purchasing power over time</button>
+                    <button class="il-opt" data-correct="false">Banks can go bankrupt</button>
+                    <button class="il-opt" data-correct="false">You earn too much and have to pay more tax</button>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary il-submit-btn" id="submit-quiz" disabled>Submit Quiz →</button>
+        <div class="il-quiz-result hidden" id="quiz-result"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         LESSON: TYPES OF INVESTMENTS
+    ═══════════════════════════════════════════════════════════ -->
+    {% elif lesson == 'types_of_investments' %}
+    <div class="il-lesson-wrap" id="lesson-content">
+        <div class="il-lesson-header">
+            <div class="il-icon-wrap il-green il-icon-lg">🌐</div>
+            <div>
+                <h2 class="page-title">Types of Investments</h2>
+                <p class="page-subtitle">Lesson 2 of 4 · ~7 min read</p>
+            </div>
+        </div>
+
+        <div class="il-content-card card">
+            <!-- Asset cards -->
+            <div class="il-asset-grid">
+                <div class="il-asset-card" style="border-top: 3px solid var(--orange);">
+                    <div class="il-asset-header">
+                        <span class="il-asset-emoji">📊</span>
+                        <span class="il-asset-name">Stocks</span>
+                        <span class="il-risk-badge il-risk-high">High Risk</span>
+                    </div>
+                    <p>A stock is a <strong>slice of ownership</strong> in a company. When the company profits, your stock value rises. You can also earn dividends.</p>
+                    <div class="il-asset-stats">
+                        <div><span>📈 Return</span><strong>10–35% p.a.</strong></div>
+                        <div><span>⏱️ Horizon</span><strong>5+ years</strong></div>
+                        <div><span>💰 Min</span><strong>₹1 (1 share)</strong></div>
+                    </div>
+                    <p class="il-note">Best for: Long-term wealth creation. Avoid if you panic-sell during dips!</p>
+                </div>
+
+                <div class="il-asset-card" style="border-top: 3px solid var(--teal);">
+                    <div class="il-asset-header">
+                        <span class="il-asset-emoji">🌐</span>
+                        <span class="il-asset-name">Mutual Funds</span>
+                        <span class="il-risk-badge il-risk-med">Medium Risk</span>
+                    </div>
+                    <p>A mutual fund pools money from many investors. A <strong>professional fund manager</strong> invests it across stocks, bonds, or both.</p>
+                    <div class="il-asset-stats">
+                        <div><span>📈 Return</span><strong>8–18% p.a.</strong></div>
+                        <div><span>⏱️ Horizon</span><strong>3–7 years</strong></div>
+                        <div><span>💰 Min</span><strong>₹500/month SIP</strong></div>
+                    </div>
+                    <p class="il-note">Best for: Beginners who want diversification without stock-picking.</p>
+                </div>
+
+                <div class="il-asset-card" style="border-top: 3px solid var(--green);">
+                    <div class="il-asset-header">
+                        <span class="il-asset-emoji">🔁</span>
+                        <span class="il-asset-name">SIP</span>
+                        <span class="il-risk-badge il-risk-med">Medium Risk</span>
+                    </div>
+                    <p>SIP (Systematic Investment Plan) is not an asset but a <strong>method</strong> — invest a fixed amount in mutual funds every month automatically.</p>
+                    <div class="il-asset-stats">
+                        <div><span>📈 Return</span><strong>12–15% avg</strong></div>
+                        <div><span>⏱️ Horizon</span><strong>5+ years</strong></div>
+                        <div><span>💰 Min</span><strong>₹100/month</strong></div>
+                    </div>
+                    <p class="il-note">Superpower: <strong>Rupee Cost Averaging</strong> — you buy more units when prices fall, less when they rise.</p>
+                </div>
+
+                <div class="il-asset-card" style="border-top: 3px solid var(--purple);">
+                    <div class="il-asset-header">
+                        <span class="il-asset-emoji">🏛️</span>
+                        <span class="il-asset-name">Bonds</span>
+                        <span class="il-risk-badge il-risk-low">Low Risk</span>
+                    </div>
+                    <p>A bond is a <strong>loan you give</strong> to a government or company. They pay you fixed interest (coupon) and return principal at maturity.</p>
+                    <div class="il-asset-stats">
+                        <div><span>📈 Return</span><strong>6–8% p.a.</strong></div>
+                        <div><span>⏱️ Horizon</span><strong>1–10 years</strong></div>
+                        <div><span>💰 Min</span><strong>₹1,000</strong></div>
+                    </div>
+                    <p class="il-note">Government bonds (G-Secs) are safest. Corporate bonds offer higher returns but more risk.</p>
+                </div>
+
+                <div class="il-asset-card" style="border-top: 3px solid var(--blue-light);">
+                    <div class="il-asset-header">
+                        <span class="il-asset-emoji">🏦</span>
+                        <span class="il-asset-name">Fixed Deposit</span>
+                        <span class="il-risk-badge il-risk-vlow">Very Low Risk</span>
+                    </div>
+                    <p>An FD locks your money with a bank for a fixed duration at a <strong>guaranteed interest rate</strong>. Principal is fully protected.</p>
+                    <div class="il-asset-stats">
+                        <div><span>📈 Return</span><strong>5.5–7.5% p.a.</strong></div>
+                        <div><span>⏱️ Horizon</span><strong>7 days – 10 yrs</strong></div>
+                        <div><span>💰 Min</span><strong>₹1,000</strong></div>
+                    </div>
+                    <p class="il-note">FDs barely beat inflation (5–6%). Use them for your emergency fund, not long-term wealth.</p>
+                </div>
+            </div>
+
+            <div class="il-callout il-callout-blue" style="margin-top:1.5rem;">
+                💡 <strong>Golden Rule of Diversification:</strong> Never put all your eggs in one basket. A healthy portfolio mixes different asset classes based on your age and risk appetite.
+            </div>
+        </div>
+    </div>
+
+    <div class="il-quiz-wrap" id="quiz-section">
+        <h3 class="il-quiz-title">🎯 Quick Quiz — Types of Investments</h3>
+        <p class="il-quiz-sub">Answer all questions to earn XP.</p>
+        <div class="il-questions">
+            <div class="il-question" data-q="0">
+                <p class="il-q-text">1. What does SIP stand for?</p>
+                <div class="il-options">
+                    <button class="il-opt" data-correct="false">Stock Investment Plan</button>
+                    <button class="il-opt" data-correct="true">Systematic Investment Plan</button>
+                    <button class="il-opt" data-correct="false">Savings Interest Protocol</button>
+                    <button class="il-opt" data-correct="false">Secure Income Product</button>
+                </div>
+            </div>
+            <div class="il-question" data-q="1">
+                <p class="il-q-text">2. Which investment type involves lending money to a government or company?</p>
+                <div class="il-options">
+                    <button class="il-opt" data-correct="false">Stocks</button>
+                    <button class="il-opt" data-correct="false">Mutual Funds</button>
+                    <button class="il-opt" data-correct="true">Bonds</button>
+                    <button class="il-opt" data-correct="false">SIP</button>
+                </div>
+            </div>
+            <div class="il-question" data-q="2">
+                <p class="il-q-text">3. Which is generally the SAFEST asset class?</p>
+                <div class="il-options">
+                    <button class="il-opt" data-correct="false">Stocks</button>
+                    <button class="il-opt" data-correct="false">Mutual Funds</button>
+                    <button class="il-opt" data-correct="false">Crypto</button>
+                    <button class="il-opt" data-correct="true">Fixed Deposit</button>
+                </div>
+            </div>
+            <div class="il-question" data-q="3">
+                <p class="il-q-text">4. "Rupee Cost Averaging" is a benefit of:</p>
+                <div class="il-options">
+                    <button class="il-opt" data-correct="true">SIP investing</button>
+                    <button class="il-opt" data-correct="false">Fixed Deposits</button>
+                    <button class="il-opt" data-correct="false">Government bonds</button>
+                    <button class="il-opt" data-correct="false">Lump-sum stock purchase</button>
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-primary il-submit-btn" id="submit-quiz" disabled>Submit Quiz →</button>
+        <div class="il-quiz-result hidden" id="quiz-result"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         LESSON: RISK VS RETURN
+    ═══════════════════════════════════════════════════════════ -->
+    {% elif lesson == 'risk_vs_return' %}
+    <div class="il-lesson-wrap" id="lesson-content">
+        <div class="il-lesson-header">
+            <div class="il-icon-wrap il-orange il-icon-lg">⚖️</div>
+            <div>
+                <h2 class="page-title">Risk vs Return</h2>
+                <p class="page-subtitle">Lesson 3 of 4 · ~6 min read</p>
+            </div>
+        </div>
+
+        <div class="il-content-card card">
+            <div class="il-section">
+                <h3>⚖️ The Fundamental Tradeoff</h3>
+                <p>In finance, <strong>higher potential return always comes with higher risk</strong>. There is no such thing as high return with zero risk — anyone promising that is running a scam.</p>
+                <div class="il-risk-spectrum">
+                    <div class="il-rs-item" style="background:#e8fff5; border-color:var(--green)">
+                        <div>🏦 FD</div><div class="il-rs-return">6–7%</div><div class="il-rs-risk" style="color:var(--green)">Very Low Risk</div>
+                    </div>
+                    <div class="il-rs-item" style="background:#eef4ff; border-color:var(--purple)">
+                        <div>🏛️ Bonds</div><div class="il-rs-return">6–8%</div><div class="il-rs-risk" style="color:var(--purple)">Low Risk</div>
+                    </div>
+                    <div class="il-rs-item" style="background:#f0fbff; border-color:var(--teal)">
+                        <div>🌐 MF/SIP</div><div class="il-rs-return">10–15%</div><div class="il-rs-risk" style="color:var(--teal)">Medium Risk</div>
+                    </div>
+                    <div class="il-rs-item" style="background:#fff8ee; border-color:var(--orange)">
+                        <div>📊 Stocks</div><div class="il-rs-return">12–35%</div><div class="il-rs-risk" style="color:var(--orange)">High Risk</div>
+                    </div>
+                    <div class="il-rs-item" style="background:#fff0f0; border-color:var(--red)">
+                        <div>🪙 Crypto</div><div class="il-rs-return">-80 to +200%</div><div class="il-rs-risk" style="color:var(--red)">Very High Risk</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="il-section">
+                <h3>🎲 Types of Risk</h3>
+                <div class="il-cards-mini">
+                    <div class="il-mini-card">
+                        <div class="il-mini-icon">📉</div>
+                        <strong>Market Risk</strong>
+                        <p>Overall market crash (2008, 2020). All stocks fall together.</p>
+                    </div>
+                    <div class="il-mini-card">
+                        <div class="il-mini-icon">🏢</div>
+                        <strong>Company Risk</strong>
+                        <p>A specific company fails (e.g. Yes Bank 2020). Diversification helps.</p>
+                    </div>
+                    <div class="il-mini-card">
+                        <div class="il-mini-icon">💸</div>
+                        <strong>Inflation Risk</strong>
+                        <p>Returns that don't beat inflation lose real value over time.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="il-section">
+                <h3>🛡️ How to Manage Risk</h3>
+                <ul class="il-list">
+                    <li><strong>Diversify:</strong> Spread investments across asset classes, sectors, and geographies.</li>
+                    <li><strong>Long time horizon:</strong> Market volatility smooths out over 7–10 years.</li>
+                    <li><strong>Don't panic sell:</strong> Selling during a crash locks in your losses permanently.</li>
+                    <li><strong>Age rule of thumb:</strong> Your equity % ≈ 100 minus your age. At 25: 75% equity, 25% debt.</li>
+                </ul>
+                <div class="il-callout il-callout-green">
+                    ✅ <strong>Risk ≠ Bad:</strong> Controlled risk, taken with a long horizon, is how wealth is built. The real risk for young investors is being <em>too conservative</em>.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="il-quiz-wrap" id="quiz-section">
+        <h3 class="il-quiz-title">🎯 Quick Quiz — Risk vs Return</h3>
+        <p class="il-quiz-sub">Answer all questions to earn XP.</p>
+        <div class="il-questions">
+            <div class="il-question" data-q="0">
+                <p class="il-q-text">1. In general, what happens to risk as potential return increases?</p>
+                <div class="il-options">
+                    <button class="il-opt" data-correct="false">Risk decreases</button>
+                    <button class="il-opt" data-correct="true">Risk increases</button>
+                    <button class="il-opt" data-correct="false">Risk stays the same</button>
+                    <button class="il-opt" data-correct="false">There is no relationship</button>
+                </div>
+            </div>
+            <div class="il-question" data-q="1">
+                <p class="il-q-text">2. The "100 minus age" rule determines your ideal allocation to:</p>
+                <div class="il-options">
+                    <button class="il-opt" data-correct="false">Fixed Deposits</button>
+                    <button class="il-opt" data-correct="false">Bonds</button>
+                    <button class="il-opt" data-correct="true">Equity (stocks/equity mutual funds)</button>
+                    <button class="il-opt" data-correct="false">Gold</button>
+                </div>
+            </div>
+            <div class="il-question" data-q="2">
+                <p class="il-q-text">3. What is the best protection against "company risk"?</p>
+                <div class="il-options">
+                    <button class="il-opt" data-correct="false">Buy only one stock you trust completely</button>
+                    <button class="il-opt" data-correct="true">Diversify across many stocks/asset classes</button>
+                    <button class="il-opt" data-correct="false">Keep all money in FD</button>
+                    <button class="il-opt" data-correct="false">Invest only in government schemes</button>
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-primary il-submit-btn" id="submit-quiz" disabled>Submit Quiz →</button>
+        <div class="il-quiz-result hidden" id="quiz-result"></div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         LESSON: BEGINNER STRATEGY
+    ═══════════════════════════════════════════════════════════ -->
+    {% elif lesson == 'beginner_strategy' %}
+    <div class="il-lesson-wrap" id="lesson-content">
+        <div class="il-lesson-header">
+            <div class="il-icon-wrap il-teal il-icon-lg">🚀</div>
+            <div>
+                <h2 class="page-title">Beginner Investment Strategy</h2>
+                <p class="page-subtitle">Lesson 4 of 4 · ~6 min read</p>
+            </div>
+        </div>
+
+        <div class="il-content-card card">
+            <div class="il-section">
+                <h3>🪜 The 5-Step Beginner Roadmap</h3>
+                <div class="il-steps">
+                    <div class="il-step">
+                        <div class="il-step-num">1</div>
+                        <div class="il-step-body">
+                            <strong>Build Your Emergency Fund First</strong>
+                            <p>Before any investment, save 3–6 months of expenses in a high-yield savings account or liquid mutual fund. This is your financial safety net.</p>
+                            <div class="il-callout il-callout-green">Goal: ₹75,000–₹1.5 lakh (for ₹25k/month spender)</div>
+                        </div>
+                    </div>
+                    <div class="il-step">
+                        <div class="il-step-num">2</div>
+                        <div class="il-step-body">
+                            <strong>Clear High-Interest Debt</strong>
+                            <p>Credit card debt at 36%/year? Paying that off is a guaranteed 36% return — better than any investment.</p>
+                        </div>
+                    </div>
+                    <div class="il-step">
+                        <div class="il-step-num">3</div>
+                        <div class="il-step-body">
+                            <strong>Start a SIP in an Index Fund</strong>
+                            <p>Open a mutual fund account (Zerodha Coin, Groww, or Kuvera). Start a monthly SIP in a Nifty 50 or Nifty 500 index fund. Even ₹500/month is perfect to begin.</p>
+                            <div class="il-callout il-callout-blue">💡 Index funds beat 85% of actively managed funds over 10+ years, with lower fees.</div>
+                        </div>
+                    </div>
+                    <div class="il-step">
+                        <div class="il-step-num">4</div>
+                        <div class="il-step-body">
+                            <strong>Automate &amp; Increase Gradually</strong>
+                            <p>Set the SIP on auto-debit on salary day. Every year, increase your SIP by 10–15% to match income growth (called "step-up SIP").</p>
+                        </div>
+                    </div>
+                    <div class="il-step">
+                        <div class="il-step-num">5</div>
+                        <div class="il-step-body">
+                            <strong>Review Annually, Not Daily</strong>
+                            <p>Check your portfolio once a year, not daily. Obsessing over daily NAV fluctuations leads to emotional decisions and panic selling — the #1 wealth destroyer.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="il-section">
+                <h3>📊 Suggested Portfolio for a 22-Year-Old</h3>
+                <div class="il-portfolio-bar">
+                    <div class="il-pb-seg" style="width:70%; background:var(--green);" title="70% Equity">70% Equity MF/SIP</div>
+                    <div class="il-pb-seg" style="width:15%; background:var(--teal);" title="15% Bonds">15% Bonds</div>
+                    <div class="il-pb-seg" style="width:10%; background:var(--gold); color:#333;" title="10% Gold">10% Gold</div>
+                    <div class="il-pb-seg" style="width:5%; background:var(--blue-light);" title="5% FD">5% FD</div>
+                </div>
+                <p class="il-note" style="margin-top:0.75rem;">As you age, gradually shift allocation from equity to debt for stability.</p>
+            </div>
+
+            <div class="il-callout il-callout-green">
+                🏆 <strong>Your Action Plan:</strong> This week, open a free account on Groww or Kuvera, complete KYC, and start a ₹500 SIP in a Nifty 50 index fund. That single action beats 90% of people who only plan!
+            </div>
+        </div>
+    </div>
+
+    <div class="il-quiz-wrap" id="quiz-section">
+        <h3 class="il-quiz-title">🎯 Quick Quiz — Beginner Strategy</h3>
+        <p class="il-quiz-sub">Final quiz! Answer all questions to earn XP.</p>
+        <div class="il-questions">
+            <div class="il-question" data-q="0">
+                <p class="il-q-text">1. What should you do FIRST before investing?</p>
+                <div class="il-options">
+                    <button class="il-opt" data-correct="false">Buy stocks immediately</button>
+                    <button class="il-opt" data-correct="true">Build an emergency fund (3–6 months expenses)</button>
+                    <button class="il-opt" data-correct="false">Open a crypto account</button>
+                    <button class="il-opt" data-correct="false">Wait until you earn more</button>
+                </div>
+            </div>
+            <div class="il-question" data-q="1">
+                <p class="il-q-text">2. Why do index funds outperform most active funds over the long term?</p>
+                <div class="il-options">
+                    <button class="il-opt" data-correct="false">They take more risk</button>
+                    <button class="il-opt" data-correct="false">They are managed by AI</button>
+                    <button class="il-opt" data-correct="true">Lower fees + broad diversification + no manager bias</button>
+                    <button class="il-opt" data-correct="false">They invest only in government bonds</button>
+                </div>
+            </div>
+            <div class="il-question" data-q="2">
+                <p class="il-q-text">3. How often should a beginner review their long-term investment portfolio?</p>
+                <div class="il-options">
+                    <button class="il-opt" data-correct="false">Every day</button>
+                    <button class="il-opt" data-correct="false">Every week</button>
+                    <button class="il-opt" data-correct="false">Every month</button>
+                    <button class="il-opt" data-correct="true">Once a year (annual review)</button>
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-primary il-submit-btn" id="submit-quiz" disabled>Submit Quiz →</button>
+        <div class="il-quiz-result hidden" id="quiz-result"></div>
+    </div>
+    {% endif %}
+
+    <!-- Next Lesson / Back nav -->
+    <div class="il-lesson-nav">
+        <a href="/invest-learn" class="btn btn-outline">← All Lessons</a>
+        {% if next_lesson %}
+        <a href="/invest-learn/{{ next_lesson }}" class="btn btn-primary" id="next-btn">Next Lesson →</a>
+        {% else %}
+        <a href="/invest-learn" class="btn btn-primary">🏆 Back to Hub</a>
+        {% endif %}
+    </div>
+
+</main>
+
+<script>
+// ─── Quiz Logic ───────────────────────────────────────────────────────────────
+const LESSON   = '{{ lesson }}';
+const NEXT     = '{{ next_lesson or "" }}';
+const questions = document.querySelectorAll('.il-question');
+const submitBtn = document.getElementById('submit-quiz');
+const resultDiv = document.getElementById('quiz-result');
+const answers   = {};
+
+questions.forEach((qDiv, qi) => {
+    qDiv.querySelectorAll('.il-opt').forEach(btn => {
+        btn.addEventListener('click', () => {
+            qDiv.querySelectorAll('.il-opt').forEach(b => b.classList.remove('il-opt-selected'));
+            btn.classList.add('il-opt-selected');
+            answers[qi] = btn.dataset.correct === 'true';
+            if (Object.keys(answers).length === questions.length) {
+                submitBtn.disabled = false;
+            }
+        });
+    });
+});
+
+submitBtn.addEventListener('click', async () => {
+    submitBtn.disabled = true;
+
+    // Reveal correct/wrong
+    questions.forEach((qDiv, qi) => {
+        qDiv.querySelectorAll('.il-opt').forEach(btn => {
+            btn.disabled = true;
+            if (btn.dataset.correct === 'true') btn.classList.add('il-opt-correct');
+            else if (btn.classList.contains('il-opt-selected')) btn.classList.add('il-opt-wrong');
+        });
+    });
+
+    const correct = Object.values(answers).filter(Boolean).length;
+    const total   = questions.length;
+    const score   = Math.round((correct / total) * 100);
+
+    // Post to API
+    try {
+        await fetch('/api/invest_learn/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lesson: LESSON, quiz_score: score }),
+        });
+    } catch(e) { console.warn('Could not save progress', e); }
+
+    // Show result
+    resultDiv.classList.remove('hidden');
+    if (score >= 60) {
+        resultDiv.innerHTML = `
+            <div class="il-result-success">
+                <div class="il-result-emoji">🎉</div>
+                <div>
+                    <strong>${correct}/${total} correct — ${score}% · +75 XP earned!</strong>
+                    <p>${score === 100 ? 'Perfect score! You nailed it! 🏆' : 'Lesson marked complete. Keep going!'}</p>
+                </div>
+            </div>`;
+    } else {
+        resultDiv.innerHTML = `
+            <div class="il-result-fail">
+                <div class="il-result-emoji">📖</div>
+                <div>
+                    <strong>${correct}/${total} correct — ${score}%</strong>
+                    <p>Review the lesson above and try again! You need 60% to pass.</p>
+                </div>
+            </div>`;
+        submitBtn.textContent = 'Retry Quiz';
+        submitBtn.disabled = false;
+        submitBtn.addEventListener('click', () => location.reload(), { once: true });
+    }
+});
+</script>
+</body>
+</html>

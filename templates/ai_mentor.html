@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Mentor – FinLiteracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_mentor.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon-sm">₹</div>
+        <span>FinLiteracy</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard"    class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+        <a href="/scenario"     class="nav-item"><span class="nav-icon">🎮</span> Scenarios</a>
+        <a href="/learning"     class="nav-item"><span class="nav-icon">📚</span> Learning Path</a>
+        <a href="/invest"       class="nav-item"><span class="nav-icon">📈</span> Invest</a>
+        <a href="/mentor"       class="nav-item active"><span class="nav-icon">🤖</span> AI Mentor</a>
+        <a href="/leaderboard"  class="nav-item"><span class="nav-icon">🏅</span> Leaderboard</a>
+        <a href="/achievements" class="nav-item"><span class="nav-icon">🏆</span> Achievements</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="streak-badge">🔥 {{ user.streak_days }} day streak</div>
+        <a href="/logout" class="nav-item nav-logout"><span class="nav-icon">👋</span> Logout</a>
+    </div>
+</aside>
+
+<main class="main-content">
+    <header class="page-header">
+        <div>
+            <h2 class="page-title">🤖 AI Financial Mentor</h2>
+            <p class="page-subtitle">Ask me anything about money, budgeting, saving, or investing!</p>
+        </div>
+    </header>
+
+    <div class="mentor-layout">
+
+        <!-- ── Chat Area ── -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="mentor-avatar">🤖</div>
+                <div class="mentor-info">
+                    <strong>FinBot — AI Mentor</strong>
+                    <span class="mentor-status" id="mentor-status">● Connecting to Ollama…</span>
+                </div>
+            </div>
+
+            <!-- Messages render here; JS injects all bubbles dynamically -->
+            <div class="chat-messages" id="chat-messages"></div>
+
+            <!-- Typing indicator (hidden until fetch is in-flight) -->
+            <div class="typing-indicator hidden" id="typing">
+                <div class="message-avatar">🤖</div>
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" class="chat-input"
+                       placeholder="Ask a financial question…" autocomplete="off" />
+                <button class="chat-send-btn" id="send-btn">Send ➤</button>
+            </div>
+        </div>
+
+        <!-- ── Topics Sidebar ── -->
+        <div class="mentor-topics">
+            <h4>📌 Quick Topics</h4>
+            <button class="topic-btn" data-q="How do I create a monthly budget using the 50/30/20 rule?">💰 50/30/20 Budget</button>
+            <button class="topic-btn" data-q="What is the best way to start saving money in India?">🏦 Start saving</button>
+            <button class="topic-btn" data-q="How to start a SIP investment in India as a beginner?">📈 SIP investing</button>
+            <button class="topic-btn" data-q="How to pay off credit card debt fast using the avalanche method?">💳 Pay off debt</button>
+            <button class="topic-btn" data-q="What is an emergency fund and how much should I save?">🛡️ Emergency fund</button>
+            <button class="topic-btn" data-q="How does CIBIL credit score work and how can I improve it?">📊 CIBIL score</button>
+            <button class="topic-btn" data-q="What are the differences between mutual funds, FD, stocks and crypto?">🌐 Asset classes</button>
+            <button class="topic-btn" data-q="What is the FIRE movement and how do I achieve financial independence?">🔥 FIRE movement</button>
+
+            <div class="mentor-resources">
+                <h4>📚 Resources</h4>
+                <a href="/learning"     class="resource-link">→ Learning Path</a>
+                <a href="/scenario"     class="resource-link">→ Practice Scenarios</a>
+                <a href="/invest"       class="resource-link">→ Investment Simulator</a>
+                <a href="/achievements" class="resource-link">→ Achievements</a>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  FinLiteracy — AI Mentor Chat
+//  • Streams tokens from Ollama via /mentor/chat/stream (SSE)
+//  • Falls back to /mentor/chat (POST) if streaming fails
+//  • Live Ollama status badge via /mentor/status
+//  • Full markdown renderer (bold, italic, lists, code)
+//  • Conversation history kept for context
+// ════════════════════════════════════════════════════════════════
+
+const USERNAME     = {{ user.username | tojson }};
+const STREAM_API   = '/mentor/chat/stream';
+const CHAT_API     = '/mentor/chat';
+const STATUS_API   = '/mentor/status';
+
+const messagesEl = document.getElementById('chat-messages');
+const inputEl    = document.getElementById('chat-input');
+const sendBtn    = document.getElementById('send-btn');
+const typingEl   = document.getElementById('typing');
+const statusEl   = document.getElementById('mentor-status');
+
+// ── Markdown renderer ─────────────────────────────────────────────
+function md(raw) {
+    if (!raw) return '';
+    let s = raw
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    // Inline code `code`
+    s = s.replace(/`([^`]+)`/g, '<code style="background:#eef3ff;padding:0 4px;border-radius:4px;font-size:0.85em">$1</code>');
+    // Bold **text**
+    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Italic *text* or _text_
+    s = s.replace(/\*([^*\n]+?)\*/g, '<em>$1</em>');
+    s = s.replace(/_([^_\n]+?)_/g, '<em>$1</em>');
+
+    const lines = s.split('\n');
+    const out = [];
+    let inUL = false, inOL = false;
+
+    lines.forEach(line => {
+        const t = line.trim();
+        const isUL = /^[-•*]\s+/.test(t);
+        const isOL = /^\d+\.\s+/.test(t);
+
+        if (!isUL && inUL) { out.push('</ul>'); inUL = false; }
+        if (!isOL && inOL) { out.push('</ol>'); inOL = false; }
+
+        if (isUL) {
+            if (!inUL) { out.push('<ul>'); inUL = true; }
+            out.push('<li>' + t.replace(/^[-•*]\s+/, '') + '</li>');
+        } else if (isOL) {
+            if (!inOL) { out.push('<ol>'); inOL = true; }
+            out.push('<li>' + t.replace(/^\d+\.\s+/, '') + '</li>');
+        } else if (t === '') {
+            out.push('<br>');
+        } else {
+            out.push('<p>' + t + '</p>');
+        }
+    });
+    if (inUL) out.push('</ul>');
+    if (inOL) out.push('</ol>');
+    return out.join('').replace(/(<br>){2,}/g, '<br>');
+}
+
+// ── Create a message bubble ───────────────────────────────────────
+function createBubble(text, role) {
+    const wrap = document.createElement('div');
+    wrap.className = `message message-${role}`;
+
+    const avatar = document.createElement('div');
+    avatar.className = 'message-avatar';
+    avatar.textContent = role === 'bot' ? '🤖' : '👤';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+
+    if (role === 'bot') {
+        bubble.innerHTML = md(text);
+    } else {
+        bubble.innerHTML = '<p>' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>';
+    }
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+    wrap.style.animation = 'fadeInUp 0.3s ease';
+    return wrap;
+}
+
+// ── Scroll ────────────────────────────────────────────────────────
+function scrollBottom() {
+    setTimeout(() => { messagesEl.scrollTop = messagesEl.scrollHeight; }, 60);
+}
+
+// ── Status helpers ────────────────────────────────────────────────
+function setStatus(state, label) {
+    const colors = { online: 'var(--green)', thinking: 'var(--gold)', offline: 'var(--text-muted)', error: '#ff4d6a' };
+    statusEl.textContent = label;
+    statusEl.style.color = colors[state] || '';
+}
+
+function setBusy(busy) {
+    sendBtn.disabled = busy;
+    inputEl.disabled = busy;
+    typingEl.classList.toggle('hidden', !busy);
+    scrollBottom();
+}
+
+// ── Fetch live Ollama status on load ──────────────────────────────
+async function checkOllamaStatus() {
+    try {
+        const r = await fetch(STATUS_API);
+        const d = await r.json();
+        if (d.online) {
+            const model = d.active_model || 'llama3';
+            setStatus('online', `● Online · ${model}`);
+        } else {
+            setStatus('offline', `● Ollama offline — using keyword fallback`);
+        }
+    } catch {
+        setStatus('offline', '● Cannot reach server');
+    }
+}
+
+// ── Streaming send (SSE) ──────────────────────────────────────────
+async function sendMessageStreaming(text) {
+    setBusy(true);
+    setStatus('thinking', '● Thinking…');
+
+    // Create an empty bot bubble to stream into
+    const wrap   = document.createElement('div');
+    wrap.className = 'message message-bot';
+    wrap.style.animation = 'fadeInUp 0.3s ease';
+    const avatar = document.createElement('div');
+    avatar.className = 'message-avatar';
+    avatar.textContent = '🤖';
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.innerHTML = '<span class="stream-cursor">▍</span>';
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+    messagesEl.appendChild(wrap);
+    scrollBottom();
+    typingEl.classList.add('hidden');
+
+    let accumulated = '';
+
+    try {
+        const resp = await fetch(STREAM_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text }),
+        });
+
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            // Parse SSE lines
+            const lines = buffer.split('\n');
+            buffer = lines.pop(); // keep incomplete line
+
+            for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                const payload = line.slice(6).trim();
+                if (payload === '[DONE]') {
+                    bubble.innerHTML = md(accumulated);
+                    setBusy(false);
+                    const model = statusEl.textContent.includes('·') ? statusEl.textContent.split('·')[1].trim() : 'Ollama';
+                    setStatus('online', `● Online · ${model}`);
+                    scrollBottom();
+                    return;
+                }
+                try {
+                    const chunk = JSON.parse(payload);
+                    accumulated += chunk.token || '';
+                    // Live render as tokens arrive
+                    bubble.innerHTML = md(accumulated) + '<span class="stream-cursor">▍</span>';
+                    scrollBottom();
+                } catch { /* skip malformed */ }
+            }
+        }
+
+        // Stream ended without [DONE]
+        bubble.innerHTML = md(accumulated) || '<p>No response received.</p>';
+
+    } catch (err) {
+        console.warn('[AI Mentor] Streaming failed, falling back:', err);
+        // Remove the empty streaming bubble
+        wrap.remove();
+        await sendMessageFallback(text);
+        return;
+    }
+
+    setBusy(false);
+    checkOllamaStatus();
+    scrollBottom();
+}
+
+// ── Non-streaming fallback ────────────────────────────────────────
+async function sendMessageFallback(text) {
+    setBusy(true);
+    setStatus('thinking', '● Thinking…');
+    try {
+        const resp = await fetch(CHAT_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text }),
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        const reply = data.reply || data.error || 'Sorry, I could not generate a response.';
+        messagesEl.appendChild(createBubble(reply, 'bot'));
+    } catch (err) {
+        console.error('[AI Mentor] Fallback error:', err);
+        messagesEl.appendChild(createBubble(
+            '⚠️ Ollama is not responding. Make sure `ollama serve` is running and a model is pulled (e.g. `ollama pull llama3`). Using keyword fallback for now.',
+            'bot'
+        ));
+    } finally {
+        setBusy(false);
+        checkOllamaStatus();
+        scrollBottom();
+    }
+}
+
+// ── Main send handler ─────────────────────────────────────────────
+async function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text || sendBtn.disabled) return;
+
+    messagesEl.appendChild(createBubble(text, 'user'));
+    inputEl.value = '';
+    scrollBottom();
+
+    await sendMessageStreaming(text);
+}
+
+// ── Events ────────────────────────────────────────────────────────
+sendBtn.addEventListener('click', sendMessage);
+inputEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+});
+document.querySelectorAll('.topic-btn').forEach(btn => {
+    btn.addEventListener('click', () => { inputEl.value = btn.dataset.q; sendMessage(); });
+});
+
+// ── Init ──────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    // Greeting
+    messagesEl.appendChild(createBubble(
+        `Hi **${USERNAME}**! 👋 I'm **FinBot**, your offline AI financial mentor powered by Ollama.\n\nI can help with **budgeting, saving, SIP investing, debt payoff, CIBIL scores, tax saving**, and more — with real ₹ examples!\n\nPick a quick topic or type your question below.`,
+        'bot'
+    ));
+    scrollBottom();
+    // Live status check
+    checkOllamaStatus();
+});
+</script>
+
+<style>
+.stream-cursor {
+    display: inline-block;
+    animation: blink 0.7s step-end infinite;
+    color: var(--green);
+    font-weight: bold;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.message-bubble ol { margin-left: 1.25rem; margin-top: 0.4rem; }
+.message-bubble ol li { margin-bottom: 0.25rem; }
+</style>
+</body>
+</html>

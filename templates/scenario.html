@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scenarios – FinLiteracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/scenario.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon-sm">₹</div>
+        <span>FinLiteracy</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard"    class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+        <a href="/scenario"     class="nav-item active"><span class="nav-icon">🎮</span> Scenarios</a>
+        <a href="/learning"     class="nav-item"><span class="nav-icon">📚</span> Learning Path</a>
+        <a href="/invest"       class="nav-item"><span class="nav-icon">📈</span> Invest</a>
+        <a href="/mentor"       class="nav-item"><span class="nav-icon">🤖</span> AI Mentor</a>
+        <a href="/leaderboard"  class="nav-item"><span class="nav-icon">🏅</span> Leaderboard</a>
+        <a href="/achievements" class="nav-item"><span class="nav-icon">🏆</span> Achievements</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="streak-badge">🔥 {{ user.streak_days }} day streak</div>
+        <a href="/logout" class="nav-item nav-logout"><span class="nav-icon">👋</span> Logout</a>
+    </div>
+</aside>
+
+<main class="main-content">
+    <header class="page-header">
+        <div>
+            <h2 class="page-title">🎮 Financial Scenarios</h2>
+            <p class="page-subtitle">Make smart decisions. Earn XP. Build real-world money skills.</p>
+        </div>
+        <div class="header-coins">
+            <span class="coin-display">🪙 {{ user.coins }} coins</span>
+            <span class="coin-display xp-display">⚡ {{ user.xp }} XP</span>
+        </div>
+    </header>
+
+    <!-- Category filter tabs -->
+    <div class="scenario-tabs">
+        <button class="scenario-tab active" onclick="filterScenarios('all', this)">All ({{ scenarios | length }})</button>
+        <button class="scenario-tab" onclick="filterScenarios('budgeting', this)">💰 Budgeting</button>
+        <button class="scenario-tab" onclick="filterScenarios('saving', this)">🏦 Saving</button>
+        <button class="scenario-tab" onclick="filterScenarios('debt', this)">💳 Debt</button>
+        <button class="scenario-tab" onclick="filterScenarios('investing', this)">📈 Investing</button>
+    </div>
+
+    <div class="scenario-wrap">
+        <!-- Main scenario area -->
+        <div>
+            <!-- Scenario nav dots -->
+            <div class="scenario-nav" id="scenario-nav"></div>
+
+            <!-- Dynamic scenario card -->
+            <div class="scenario-card" id="scenario-main-card">
+                <div id="scenario-main-content">
+                    <!-- Loaded dynamically by JS -->
+                    <div style="text-align:center;padding:3rem;color:var(--text-muted);">
+                        <div style="font-size:2rem;margin-bottom:0.5rem;">⏳</div>
+                        Loading scenario…
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completed scenarios list -->
+            <div style="margin-top:1.5rem;">
+                <h3 style="font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;color:var(--blue-dark);margin-bottom:0.75rem;">
+                    📋 Scenario Library ({{ scenarios | length }} total)
+                </h3>
+                <div style="display:flex;flex-direction:column;gap:0.6rem;" id="scenario-library">
+                    {% for sc in scenarios %}
+                    <div class="scenario-library-item" data-category="{{ sc.category }}"
+                         style="display:flex;align-items:center;gap:0.85rem;padding:0.75rem 1rem;
+                                background:white;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+                                cursor:pointer;transition:all 0.2s;"
+                         onclick="jumpToScenarioBySlug('{{ sc.slug }}')"
+                         onmouseover="this.style.borderColor='var(--green)'"
+                         onmouseout="this.style.borderColor='var(--border)'">
+                        <span style="font-size:1.4rem;">{{ sc.avatar_emoji }}</span>
+                        <div style="flex:1;">
+                            <strong style="font-size:0.88rem;color:var(--blue-dark);">{{ sc.title }}</strong>
+                            <div style="font-size:0.76rem;color:var(--text-muted);margin-top:0.1rem;">
+                                {{ sc.category | capitalize }} ·
+                                {% if sc.difficulty == 'easy' %}⭐ Easy
+                                {% elif sc.difficulty == 'medium' %}⭐⭐ Medium
+                                {% else %}⭐⭐⭐ Hard{% endif %}
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <span style="font-size:0.78rem;font-weight:600;color:var(--green-dark);">+{{ sc.xp_reward }} XP</span>
+                            {% if sc.completed %}
+                            <span style="background:#e8fff5;color:var(--green-dark);border-radius:20px;padding:0.2rem 0.6rem;font-size:0.72rem;font-weight:700;">✓ Done</span>
+                            {% else %}
+                            <span style="background:var(--off-white);color:var(--text-muted);border-radius:20px;padding:0.2rem 0.6rem;font-size:0.72rem;">Play →</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Tips sidebar -->
+        <div class="scenario-tips">
+            <h4>💡 Financial Tips</h4>
+            <div class="tip-item">
+                <strong>50/30/20 Rule</strong>
+                <p>50% needs, 30% wants, 20% savings — every month!</p>
+            </div>
+            <div class="tip-item">
+                <strong>Pay Yourself First</strong>
+                <p>Auto-transfer savings on salary day. Save before spending.</p>
+            </div>
+            <div class="tip-item">
+                <strong>Compound Interest</strong>
+                <p>₹2,000/month at 12% for 20 years = ₹20 lakh! Start now.</p>
+            </div>
+            <div class="tip-item">
+                <strong>Emergency Fund</strong>
+                <p>3–6 months of expenses in liquid savings. Non-negotiable.</p>
+            </div>
+            <div class="tip-item">
+                <strong>Avoid Minimum Payments</strong>
+                <p>Credit card at 36% interest? Pay full balance every month!</p>
+            </div>
+            <div class="tip-item">
+                <strong>Diversify Investments</strong>
+                <p>Never put all eggs in one basket. Mix FD + MF + Stocks.</p>
+            </div>
+
+            <div style="margin-top:1rem;">
+                <h4>🔗 Resources</h4>
+                <a href="/learning" class="resource-link" style="display:block;padding:0.3rem 0;font-size:0.83rem;color:var(--blue-light);">→ View Learning Path</a>
+                <a href="/mentor"   class="resource-link" style="display:block;padding:0.3rem 0;font-size:0.83rem;color:var(--blue-light);">→ Ask AI Mentor</a>
+                <a href="/invest"   class="resource-link" style="display:block;padding:0.3rem 0;font-size:0.83rem;color:var(--blue-light);">→ Investment Simulator</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='js/scenario.js') }}"></script>
+<script>
+const SCENARIO_DATA = {{ scenario_data | safe }};
+
+// Build slug→index map
+const slugToIndex = {};
+SCENARIO_DATA.forEach((sc, i) => { slugToIndex[sc.slug] = i; });
+
+function jumpToScenarioBySlug(slug) {
+    const idx = slugToIndex[slug];
+    if (idx !== undefined) {
+        currentScenarioIndex = idx;
+        loadScenario(idx);
+        document.getElementById('scenario-main-card').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function filterScenarios(category, btn) {
+    document.querySelectorAll('.scenario-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.scenario-library-item').forEach(item => {
+        const show = category === 'all' || item.dataset.category === category;
+        item.style.display = show ? 'flex' : 'none';
+    });
+}
+
+// Init with full catalog
+initScenarios(JSON.stringify(SCENARIO_DATA));
+</script>
+</body>
+</html>

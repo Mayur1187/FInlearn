@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Simulator – FinLiteracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/investment_simulator.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon-sm">₹</div>
+        <span>FinLiteracy</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard"    class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+        <a href="/scenario"     class="nav-item"><span class="nav-icon">🎮</span> Scenarios</a>
+        <a href="/learning"     class="nav-item"><span class="nav-icon">📚</span> Learning Path</a>
+        <a href="/invest"       class="nav-item active"><span class="nav-icon">📈</span> Invest</a>
+        <a href="/mentor"       class="nav-item"><span class="nav-icon">🤖</span> AI Mentor</a>
+        <a href="/leaderboard"  class="nav-item"><span class="nav-icon">🏅</span> Leaderboard</a>
+        <a href="/achievements" class="nav-item"><span class="nav-icon">🏆</span> Achievements</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="streak-badge">🔥 {{ user.streak_days }} day streak</div>
+        <a href="/logout" class="nav-item nav-logout"><span class="nav-icon">👋</span> Logout</a>
+    </div>
+</aside>
+
+<main class="main-content">
+    <header class="page-header">
+        <div>
+            <h2 class="page-title">📈 Investment Simulator</h2>
+            <p class="page-subtitle">Practice investing with virtual money. Learn risk vs reward — no real money at stake!</p>
+        </div>
+        <div class="header-coins">
+            <span class="coin-display">🪙 {{ user.coins }} coins</span>
+            <span class="coin-display xp-display">⚡ {{ user.xp }} XP</span>
+        </div>
+    </header>
+
+    <!-- Portfolio Summary -->
+    <div class="portfolio-summary">
+        <div class="portfolio-card">
+            <span class="portfolio-value">₹{{ starting_balance | int }}</span>
+            <span class="portfolio-label">Starting Balance</span>
+        </div>
+        <div class="portfolio-card">
+            <span class="portfolio-value">₹{{ total_invested | int }}</span>
+            <span class="portfolio-label">Total Invested</span>
+        </div>
+        <div class="portfolio-card">
+            <span class="portfolio-value {{ 'portfolio-positive' if (total_current - total_invested) >= 0 else 'portfolio-negative' }}">
+                {{ '+' if (total_current - total_invested) >= 0 else '' }}₹{{ ((total_current - total_invested) | round(0) | int) }}
+            </span>
+            <span class="portfolio-label">Unrealised P&L</span>
+        </div>
+    </div>
+
+    <div class="invest-layout">
+        <!-- Left: Asset selection + form -->
+        <div>
+            <!-- Asset Cards -->
+            <div class="card" style="margin-bottom:1.5rem;">
+                <div class="card-header">
+                    <h3 class="card-title">🌐 Choose an Asset Class</h3>
+                    <button id="simulate-btn" class="btn btn-sm btn-outline" onclick="simulateMarket()">🔄 Simulate Market</button>
+                </div>
+                <div class="asset-cards">
+                    {% for key, asset in assets.items() %}
+                    <div class="asset-card"
+                         data-asset="{{ key }}"
+                         style="--asset-color: {{ asset.color }};"
+                         onclick="selectAsset('{{ key }}')">
+                        <div class="asset-header">
+                            <div class="asset-icon-wrap">
+                                <span class="asset-icon">{{ asset.icon }}</span>
+                                <span class="asset-name">{{ asset.name }}</span>
+                            </div>
+                            <span class="asset-risk risk-{{ asset.risk | lower | replace(' ', '-') }}">{{ asset.risk }}</span>
+                        </div>
+                        <p class="asset-desc">{{ asset.description }}</p>
+                        <div class="asset-return-range">
+                            Returns: {{ asset.min_return }}% to {{ asset.max_return }}% (simulated)
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Investment Form -->
+            <div class="invest-form" id="invest-form" style="display:none;">
+                <h3>💰 Invest Amount</h3>
+                <div class="amount-input-wrap">
+                    <span class="amount-prefix">₹</span>
+                    <input type="number" id="invest-amount" class="amount-input" placeholder="1000" min="100" step="100">
+                </div>
+                <div class="amount-presets">
+                    <button class="preset-btn" onclick="setAmount(500)">₹500</button>
+                    <button class="preset-btn" onclick="setAmount(1000)">₹1,000</button>
+                    <button class="preset-btn" onclick="setAmount(2500)">₹2,500</button>
+                    <button class="preset-btn" onclick="setAmount(5000)">₹5,000</button>
+                </div>
+                <button id="invest-btn" class="btn btn-primary btn-full" onclick="buyInvestment()">
+                    Invest Now 📈
+                </button>
+                <div class="invest-result" id="invest-result"></div>
+            </div>
+
+            <!-- Educational context -->
+            <div class="card" style="margin-top:1.5rem;background:linear-gradient(135deg,#f0fff8,#f0faff);">
+                <h3 class="card-title" style="margin-bottom:0.75rem;">📚 Did You Know?</h3>
+                <div style="display:flex;flex-direction:column;gap:0.75rem;font-size:0.87rem;color:var(--text-secondary);">
+                    <div>💡 <strong style="color:var(--blue-dark);">Compounding:</strong> ₹2,000/month at 12% for 20 years grows to ~₹20 lakhs. The earlier you start, the more you earn!</div>
+                    <div>⚖️ <strong style="color:var(--blue-dark);">Diversification:</strong> Spreading money across asset classes reduces risk without reducing returns much.</div>
+                    <div>🕐 <strong style="color:var(--blue-dark);">Time in market:</strong> "Time in the market beats timing the market." Consistent SIPs beat trying to pick the right time.</div>
+                    <div>⚠️ <strong style="color:var(--blue-dark);">Crypto rule:</strong> Never invest more than 5–10% of portfolio in crypto. It can drop 80% in a bear market.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Portfolio holdings -->
+        <div>
+            <div class="card" style="margin-bottom:1rem;">
+                <div class="card-header">
+                    <h3 class="card-title">📊 My Portfolio</h3>
+                    <span class="card-badge">{{ investments | length }} positions</span>
+                </div>
+                {% if investments %}
+                <div style="height:200px;position:relative;margin-bottom:1rem;">
+                    <canvas id="portfolio-chart"></canvas>
+                </div>
+                <div class="portfolio-holdings">
+                    {% for inv in investments %}
+                    <div class="holding-row">
+                        <div class="holding-dot" style="background:
+                            {% if inv.asset_type == 'fd' %}#00c875
+                            {% elif inv.asset_type == 'stocks' %}#ff7e2d
+                            {% elif inv.asset_type == 'mutual_funds' %}#0cbaba
+                            {% else %}#f7931a{% endif %}">
+                        </div>
+                        <span class="holding-name">
+                            {% if inv.asset_type == 'fd' %}Fixed Deposit
+                            {% elif inv.asset_type == 'stocks' %}Stocks
+                            {% elif inv.asset_type == 'mutual_funds' %}Mutual Funds
+                            {% else %}Crypto{% endif %}
+                        </span>
+                        <div style="text-align:right;">
+                            <div class="holding-amount">₹{{ inv.current_value | round(0) | int }}</div>
+                            <div class="holding-return {{ 'holding-positive' if inv.return_pct >= 0 else 'holding-negative' }}" style="font-size:0.72rem;">
+                                {{ '+' if inv.return_pct >= 0 else '' }}{{ inv.return_pct }}%
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div style="text-align:center;padding:2rem;color:var(--text-muted);">
+                    <div style="font-size:2rem;margin-bottom:0.5rem;">📭</div>
+                    <p style="font-size:0.88rem;">No investments yet.<br>Pick an asset above to start!</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Risk disclaimer -->
+            <div style="background:rgba(255,77,106,0.07);border:1.5px solid rgba(255,77,106,0.2);border-radius:var(--radius-sm);padding:1rem;">
+                <p style="font-size:0.78rem;color:#c0392b;line-height:1.6;">
+                    ⚠️ <strong>Simulator Disclaimer:</strong> This uses <em>simulated random returns</em> for educational purposes.
+                    Real markets behave differently. Never make real investment decisions based on simulator outcomes.
+                    Always consult a SEBI-registered financial advisor.
+                </p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='js/investment_simulator.js') }}"></script>
+<script>
+initInvestSimulator('{{ assets_json | safe }}');
+
+{% if investments %}
+const holdingsData = [
+    {% for inv in investments %}
+    {
+        name: '{% if inv.asset_type == "fd" %}Fixed Deposit{% elif inv.asset_type == "stocks" %}Stocks{% elif inv.asset_type == "mutual_funds" %}Mutual Funds{% else %}Crypto{% endif %}',
+        type: '{{ inv.asset_type }}',
+        current_value: {{ inv.current_value }},
+        return_pct: {{ inv.return_pct }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+initPortfolioChart(holdingsData);
+{% endif %}
+</script>
+</body>
+</html>

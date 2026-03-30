@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard – FinLiteracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon-sm">₹</div>
+        <span>FinLiteracy</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard"   class="nav-item active"><span class="nav-icon">🏠</span> Dashboard</a>
+        <a href="/scenario"    class="nav-item"><span class="nav-icon">🎮</span> Scenarios</a>
+        <a href="/learning"    class="nav-item"><span class="nav-icon">📚</span> Learning Path</a>
+        <a href="/invest"      class="nav-item"><span class="nav-icon">📈</span> Invest</a>
+        <a href="/mentor"      class="nav-item"><span class="nav-icon">🤖</span> AI Mentor</a>
+        <a href="/leaderboard" class="nav-item"><span class="nav-icon">🏅</span> Leaderboard</a>
+        <a href="/achievements"class="nav-item"><span class="nav-icon">🏆</span> Achievements</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="streak-badge">🔥 {{ user.streak_days }} day streak</div>
+        <a href="/logout" class="nav-item nav-logout"><span class="nav-icon">👋</span> Logout</a>
+    </div>
+</aside>
+
+<main class="main-content">
+    <header class="page-header">
+        <div>
+            <h2 class="page-title">Welcome back, <span class="highlight">{{ user.username }}</span>! 👋</h2>
+            <p class="page-subtitle">You're on a {{ user.streak_days }}-day streak. Keep crushing it!</p>
+        </div>
+        <div class="header-coins">
+            <span class="coin-display">🪙 {{ user.coins }} coins</span>
+            <span class="coin-display xp-display">⚡ {{ user.xp }} XP</span>
+        </div>
+    </header>
+
+    <!-- Stats Row -->
+    <div class="stats-grid">
+        <div class="stat-card stat-blue">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-info">
+                <span class="stat-value">{{ user.xp }}</span>
+                <span class="stat-label">Total XP</span>
+            </div>
+        </div>
+        <div class="stat-card stat-green">
+            <div class="stat-icon">🏅</div>
+            <div class="stat-info">
+                <span class="stat-value">Level {{ user.level }}</span>
+                <span class="stat-label">Current Level</span>
+            </div>
+        </div>
+        <div class="stat-card stat-teal">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-info">
+                <span class="stat-value">{{ progress.scenarios_completed }}</span>
+                <span class="stat-label">Scenarios Done</span>
+            </div>
+        </div>
+        <div class="stat-card stat-orange">
+            <div class="stat-icon">📊</div>
+            <div class="stat-info">
+                <span class="stat-value">{{ progress.financial_score | int }}%</span>
+                <span class="stat-label">Finance Score</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Left column -->
+        <div class="col-left">
+
+            <!-- XP Progress -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">⚡ XP Progress</h3>
+                    <span class="card-badge">Level {{ user.level }} → {{ user.level + 1 }}</span>
+                </div>
+                <div class="xp-bar-wrap">
+                    <div class="xp-bar">
+                        <div class="xp-fill" style="width: {{ xp_percent }}%"></div>
+                    </div>
+                    <div class="xp-labels">
+                        <span>{{ user.xp % xp_for_next }} XP this level</span>
+                        <span>{{ xp_for_next }} XP needed</span>
+                    </div>
+                </div>
+                <p class="xp-tip">Complete scenarios to earn more XP and level up! 🚀</p>
+            </div>
+
+            <!-- Daily Challenge -->
+            <div class="card card-highlight">
+                <div class="card-header">
+                    <h3 class="card-title">🔥 Daily Challenge</h3>
+                    <span class="badge badge-new">NEW</span>
+                </div>
+                <div class="challenge-content">
+                    <p class="challenge-title">Credit Card Decision Challenge</p>
+                    <p class="challenge-desc">Navigate a ₹30,000 credit card debt situation and choose the smartest repayment strategy.</p>
+                    <div class="challenge-reward">
+                        <span>🪙 +200 coins</span>
+                        <span>⚡ +280 XP</span>
+                        <span class="challenge-timer">⏰ Loading…</span>
+                    </div>
+                </div>
+                <a href="/scenario" class="btn btn-primary">Accept Challenge</a>
+            </div>
+
+            <!-- Skills Radar Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🕸️ Skills Radar</h3>
+                    <span class="score-badge">{{ progress.financial_score | int }}/100</span>
+                </div>
+                <div style="height:220px; position:relative;">
+                    <canvas id="skills-radar"></canvas>
+                </div>
+            </div>
+
+            <!-- Savings Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">💰 Savings Activity</h3>
+                    <span class="card-badge">Last 6 months</span>
+                </div>
+                <div style="height:180px; position:relative;">
+                    <canvas id="savings-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Financial Health Bar Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">💚 Financial Health Breakdown</h3>
+                </div>
+                <div class="health-chart">
+                    <div class="chart-bar-group">
+                        <div class="chart-label">Budgeting</div>
+                        <div class="chart-bar-track">
+                            <div class="chart-bar-fill" style="width: {{ progress.budgeting_score | int }}%">{{ progress.budgeting_score | int }}%</div>
+                        </div>
+                    </div>
+                    <div class="chart-bar-group">
+                        <div class="chart-label">Saving</div>
+                        <div class="chart-bar-track">
+                            <div class="chart-bar-fill" style="width: {{ progress.saving_score | int }}%">{{ progress.saving_score | int }}%</div>
+                        </div>
+                    </div>
+                    <div class="chart-bar-group">
+                        <div class="chart-label">Investing</div>
+                        <div class="chart-bar-track">
+                            <div class="chart-bar-fill cb-orange" style="width: {{ progress.investing_score | int }}%">{{ progress.investing_score | int }}%</div>
+                        </div>
+                    </div>
+                    <div class="chart-bar-group">
+                        <div class="chart-label">Debt Mgmt</div>
+                        <div class="chart-bar-track">
+                            <div class="chart-bar-fill cb-teal" style="width: {{ progress.debt_score | int }}%">{{ progress.debt_score | int }}%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right column -->
+        <div class="col-right">
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <h3 class="card-title" style="margin-bottom:1rem;">🚀 Quick Actions</h3>
+                <div class="actions-grid">
+                    <a href="/scenario" class="action-btn">
+                        <div class="action-icon">🎮</div><span>Play Scenario</span>
+                    </a>
+                    <a href="/invest" class="action-btn">
+                        <div class="action-icon">📈</div><span>Invest</span>
+                    </a>
+                    <a href="/learning" class="action-btn">
+                        <div class="action-icon">📚</div><span>Learn</span>
+                    </a>
+                    <a href="/mentor" class="action-btn action-btn-special">
+                        <div class="action-icon">🤖</div><span>AI Mentor</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Portfolio Summary -->
+            {% if investments %}
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">💼 Portfolio</h3>
+                    <a href="/invest" class="card-link">View all →</a>
+                </div>
+                <div class="portfolio-holdings">
+                    {% for inv in investments[:4] %}
+                    <div class="holding-row">
+                        <div class="holding-dot" style="background:
+                            {% if inv.asset_type == 'fd' %}#00c875
+                            {% elif inv.asset_type == 'stocks' %}#ff7e2d
+                            {% elif inv.asset_type == 'mutual_funds' %}#0cbaba
+                            {% else %}#f7931a{% endif %}"></div>
+                        <span class="holding-name">
+                            {% if inv.asset_type == 'fd' %}Fixed Deposit
+                            {% elif inv.asset_type == 'stocks' %}Stocks
+                            {% elif inv.asset_type == 'mutual_funds' %}Mutual Funds
+                            {% else %}Crypto{% endif %}
+                        </span>
+                        <span class="holding-amount">₹{{ inv.amount | int }}</span>
+                        <span class="holding-return {{ 'holding-positive' if inv.return_pct >= 0 else 'holding-negative' }}">
+                            {{ '+' if inv.return_pct >= 0 else '' }}{{ inv.return_pct }}%
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div style="margin-top:0.75rem; display:flex; justify-content:space-between; font-size:0.82rem;">
+                    <span style="color:var(--text-muted)">Total invested: ₹{{ total_invested | int }}</span>
+                    <span class="{{ 'text-green' if portfolio_return >= 0 else 'text-red' }} font-bold">
+                        {{ '+' if portfolio_return >= 0 else '' }}{{ portfolio_return }}%
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Badges -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🏆 Badges</h3>
+                    <a href="/achievements" class="card-link">View all →</a>
+                </div>
+                <div class="badges-grid">
+                    {% for badge in earned_badges[:3] %}
+                    <div class="badge-item earned" title="{{ badge.desc }}">
+                        <div class="badge-icon">{{ badge.icon }}</div>
+                        <span>{{ badge.name }}</span>
+                    </div>
+                    {% endfor %}
+                    {% for badge in locked_badges[:3] %}
+                    <div class="badge-item locked" title="Locked">
+                        <div class="badge-icon">🔒</div>
+                        <span>{{ badge.name }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Leaderboard -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🏅 Leaderboard</h3>
+                    <a href="/leaderboard" class="card-link">Full →</a>
+                </div>
+                <div class="leaderboard-list">
+                    {% for u in top_users[:4] %}
+                    <div class="leaderboard-item {% if u.id == user.id %}leaderboard-you{% endif %}">
+                        <span class="rank {% if loop.index == 1 %}rank-gold{% elif loop.index == 2 %}rank-silver{% elif loop.index == 3 %}rank-bronze{% endif %}">
+                            {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}
+                        </span>
+                        <span class="lb-name">{{ u.username }}{% if u.id == user.id %} (you){% endif %}</span>
+                        <span class="lb-xp">{{ u.xp }} XP</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <p style="margin-top:0.75rem;font-size:0.78rem;text-align:center;color:var(--text-muted);">
+                    Your rank: <strong style="color:var(--green-dark)">#{{ my_rank }}</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+<script>
+    startCountdown();
+    initDashboardCharts([
+        {{ progress.budgeting_score | int }},
+        {{ progress.saving_score | int }},
+        {{ progress.investing_score | int }},
+        {{ progress.debt_score | int }},
+        50
+    ]);
+    initSavingsChart([400, 700, 600, 1100, 950, 1400]);
+</script>
+</body>
+</html>

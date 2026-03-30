@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Path – FinLiteracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/learning_path.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon-sm">₹</div><span>FinLiteracy</span></div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard"    class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+        <a href="/scenario"     class="nav-item"><span class="nav-icon">🎮</span> Scenarios</a>
+        <a href="/learning"     class="nav-item active"><span class="nav-icon">📚</span> Learning Path</a>
+        <a href="/invest"       class="nav-item"><span class="nav-icon">📈</span> Invest</a>
+        <a href="/mentor"       class="nav-item"><span class="nav-icon">🤖</span> AI Mentor</a>
+        <a href="/leaderboard"  class="nav-item"><span class="nav-icon">🏅</span> Leaderboard</a>
+        <a href="/achievements" class="nav-item"><span class="nav-icon">🏆</span> Achievements</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="streak-badge">🔥 {{ user.streak_days }} day streak</div>
+        <a href="/logout" class="nav-item nav-logout"><span class="nav-icon">👋</span> Logout</a>
+    </div>
+</aside>
+
+<main class="main-content">
+    <header class="page-header">
+        <div>
+            <h2 class="page-title">📚 Your Learning Path</h2>
+            <p class="page-subtitle">Master personal finance step by step. Complete topics → take quiz → earn certificate.</p>
+        </div>
+        <div class="header-coins">
+            <span class="coin-display">🪙 {{ user.coins }} coins</span>
+            <span class="coin-display xp-display">⚡ {{ user.xp }} XP</span>
+        </div>
+    </header>
+
+    <!-- Overall progress -->
+    <div class="card overall-progress-card">
+        <div class="op-left">
+            <h3>Overall Progress</h3>
+            <p>{{ levels_data | selectattr('status','eq','complete') | list | length }} of {{ levels_data | length }} levels completed</p>
+        </div>
+        <div class="op-right">
+            <div class="big-progress-track">
+                <div class="big-progress-fill" style="width:{{ overall_pct }}%"></div>
+            </div>
+            <span class="op-percent">{{ overall_pct }}%</span>
+        </div>
+    </div>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="flash flash-{{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <!-- Learning Path -->
+    <div class="learning-path">
+        {% for ld in levels_data %}
+        {% set level = ld.level %}
+        {% set status = ld.status %}
+
+        {% if not loop.first %}<div class="path-connector {{ 'connector-locked' if status == 'locked' else '' }}"></div>{% endif %}
+
+        <div class="level-card level-{{ status }}">
+            <div class="level-status">
+                <div class="level-dot dot-{{ status }}">
+                    {% if status == 'complete' %}✓
+                    {% elif status == 'locked' %}🔒
+                    {% else %}{{ loop.index }}{% endif %}
+                </div>
+            </div>
+            <div class="level-content">
+                <div class="level-header">
+                    <div class="level-icon">{{ level.icon }}</div>
+                    <div class="level-title-wrap">
+                        <span class="level-num">Level {{ loop.index }}</span>
+                        <h3 class="level-title">{{ level.title }}</h3>
+                    </div>
+                    <span class="level-badge badge-{{ status }}">
+                        {% if status == 'complete' %}✅ Completed
+                        {% elif status == 'active' %}🔄 In Progress
+                        {% else %}🔒 Locked{% endif %}
+                    </span>
+                </div>
+                <p class="level-desc">{{ level.desc }}</p>
+
+                <!-- Topic chips -->
+                <div class="level-topics">
+                    {% for ti in range(ld.total_topics) %}
+                    {% set topic = level.topics[ti] %}
+                    <span class="topic-chip {{ 'done' if ti < ld.done_topics else ('active' if ti == ld.done_topics else 'locked') }}">
+                        {{ topic.icon }} {{ topic.title }}
+                    </span>
+                    {% endfor %}
+                </div>
+
+                <!-- Progress bar (if active) -->
+                {% if status == 'active' and ld.total_topics > 0 %}
+                <div class="level-progress-mini">
+                    <div class="mini-track"><div class="mini-fill" style="width:{{ ld.pct }}%"></div></div>
+                    <span>{{ ld.done_topics }} / {{ ld.total_topics }} topics done</span>
+                </div>
+                {% endif %}
+
+                <!-- Quiz score (if attempted) -->
+                {% if ld.quiz_score is not none %}
+                <div class="quiz-score-row">
+                    <span>📝 Best quiz score:</span>
+                    <strong class="{{ 'score-pass' if ld.quiz_passed else 'score-fail' }}">{{ ld.quiz_score }}%</strong>
+                    {% if ld.quiz_passed %}
+                    <a href="/learning/{{ level.slug }}/certificate" class="btn btn-sm btn-cert">🎓 Download Certificate</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="level-footer">
+                    <span class="level-xp">⚡ {{ level.xp_reward }} XP  🪙 {{ level.coins_reward }} coins</span>
+                    {% if status == 'locked' %}
+                        <span class="unlock-hint">Complete previous level to unlock</span>
+                    {% else %}
+                        <a href="/learning/{{ level.slug }}" class="btn btn-sm {{ 'btn-outline' if status == 'complete' else 'btn-primary' }}">
+                            {% if status == 'complete' %}Review →{% else %}{{ 'Continue →' if ld.done_topics > 0 else 'Start →' }}{% endif %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</main>
+<script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+</body>
+</html>

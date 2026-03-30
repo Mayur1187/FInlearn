@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ level.title }} – FinLiteracy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/learning_path.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<aside class="sidebar">
+    <div class="sidebar-brand"><div class="brand-icon-sm">₹</div><span>FinLiteracy</span></div>
+    <nav class="sidebar-nav">
+        <a href="/dashboard"    class="nav-item"><span class="nav-icon">🏠</span> Dashboard</a>
+        <a href="/scenario"     class="nav-item"><span class="nav-icon">🎮</span> Scenarios</a>
+        <a href="/learning"     class="nav-item active"><span class="nav-icon">📚</span> Learning Path</a>
+        <a href="/invest"       class="nav-item"><span class="nav-icon">📈</span> Invest</a>
+        <a href="/mentor"       class="nav-item"><span class="nav-icon">🤖</span> AI Mentor</a>
+        <a href="/leaderboard"  class="nav-item"><span class="nav-icon">🏅</span> Leaderboard</a>
+        <a href="/achievements" class="nav-item"><span class="nav-icon">🏆</span> Achievements</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="streak-badge">🔥 {{ user.streak_days }} day streak</div>
+        <a href="/logout" class="nav-item nav-logout"><span class="nav-icon">👋</span> Logout</a>
+    </div>
+</aside>
+
+<main class="main-content">
+    <header class="page-header">
+        <div>
+            <a href="/learning" class="back-link">← Learning Path</a>
+            <h2 class="page-title">{{ level.icon }} {{ level.title }}</h2>
+            <p class="page-subtitle">{{ level.desc }}</p>
+        </div>
+        <div class="header-coins">
+            <span class="coin-display">⚡ {{ level.xp_reward }} XP reward</span>
+        </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="flash flash-{{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <!-- Progress bar -->
+    {% set done_count = topics_info | selectattr('done') | list | length %}
+    {% set total_count = topics_info | length %}
+    <div class="card level-progress-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+            <span style="font-weight:600;font-size:0.9rem;">Topics completed: {{ done_count }} / {{ total_count }}</span>
+            {% if all_topics_done %}
+            <span class="badge-complete" style="padding:0.3rem 0.8rem;border-radius:20px;font-size:0.8rem;">✅ All topics done!</span>
+            {% endif %}
+        </div>
+        <div class="big-progress-track">
+            <div class="big-progress-fill" style="width:{{ (done_count / total_count * 100) | int if total_count else 0 }}%"></div>
+        </div>
+    </div>
+
+    <!-- Topic cards -->
+    <div class="topics-grid">
+        {% for ti in topics_info %}
+        {% set topic = ti.topic %}
+        <a href="/learning/{{ level.slug }}/{{ topic.slug }}" class="topic-card {{ 'topic-done' if ti.done else 'topic-todo' }}">
+            <div class="tc-icon">{{ topic.icon }}</div>
+            <div class="tc-body">
+                <div class="tc-title">{{ topic.title }}</div>
+                <div class="tc-steps">{{ topic.steps | length }} steps</div>
+            </div>
+            <div class="tc-status">
+                {% if ti.done %}
+                <span class="tc-check">✓</span>
+                {% else %}
+                <span class="tc-arrow">→</span>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Quiz CTA -->
+    <div class="quiz-cta {{ 'quiz-ready' if all_topics_done else 'quiz-locked' }}">
+        <div class="qcta-left">
+            <div class="qcta-icon">📝</div>
+            <div>
+                <div class="qcta-title">Level Quiz</div>
+                <div class="qcta-desc">
+                    {% if all_topics_done %}
+                        10 questions · Pass {{ 70 }}%+ to earn your certificate
+                    {% else %}
+                        Complete all {{ total_count }} topics to unlock the quiz
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% if all_topics_done %}
+            {% if quiz_result and quiz_result.passed %}
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+                <a href="/learning/{{ level.slug }}/quiz" class="btn btn-sm btn-outline">Retake Quiz</a>
+                <a href="/learning/{{ level.slug }}/certificate" class="btn btn-sm btn-cert">🎓 Get Certificate</a>
+            </div>
+            {% else %}
+            <a href="/learning/{{ level.slug }}/quiz" class="btn btn-primary">Take Quiz →</a>
+            {% endif %}
+        {% else %}
+        <span class="unlock-hint">{{ total_count - done_count }} topics remaining</span>
+        {% endif %}
+    </div>
+
+    {% if quiz_result %}
+    <div class="quiz-history">
+        <h4>📊 Your best quiz score: 
+            <strong class="{{ 'score-pass' if quiz_result.passed else 'score-fail' }}">
+                {{ quiz_result.score }}%
+            </strong>
+            {% if quiz_result.passed %}— Passed ✅{% else %}— Not passed yet (need 70%){% endif %}
+        </h4>
+    </div>
+    {% endif %}
+</main>
+</body>
+</html>
