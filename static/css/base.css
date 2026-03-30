@@ -318,3 +318,25 @@ img { max-width: 100%; }
     .sidebar { display: none; }
     .main-content { margin-left: 0; padding: 1rem; }
 }
+
+
+body {
+    margin: 0;
+    background: #0d1117;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    width: 95%;
+    margin: auto;
+}
+
+h1 {
+    margin: 20px 0;
+}
+
+#chart {
+    width: 100%;
+    height: 500px;
+}

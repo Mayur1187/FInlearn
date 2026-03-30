@@ -56,3 +56,36 @@ if __name__ == '__main__':
     print("   OAuth: Google & GitHub (set env vars in .env)")
     print("   AI Mentor: Groq (LLaMA 3) → Ollama → Anthropic → keyword fallback")
     app.run(debug=True, port=5000)
+
+from modules.stock_simulator import StockMarket, Portfolio
+market = StockMarket()
+portfolio = Portfolio()
+@app.route('/market')
+def market_view():
+    market.update_prices()
+    prices = market.get_prices()
+    return render_template('market.html', prices=prices)
+
+
+@app.route('/buy/<stock>')
+def buy(stock):
+    price = market.get_prices()[stock]
+    portfolio.buy_stock(stock, price, 1)
+    return redirect('/market')
+
+
+@app.route('/sell/<stock>')
+def sell(stock):
+    price = market.get_prices()[stock]
+    portfolio.sell_stock(stock, price, 1)
+    return redirect('/market')
+@app.route('/market')
+def market_view():
+    return render_template('market.html', prices=prices)
+@app.route('/market')
+def market():
+    from modules.stock_simulator import StockMarket
+    market = StockMarket()
+    prices = market.get_prices()
+    return render_template('market.html', prices=prices)
+from flask import render_template

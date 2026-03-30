@@ -26,3 +26,5 @@ def register_routes(app):
     app.register_blueprint(mentor_bp)
     app.register_blueprint(api_bp)
     app.register_blueprint(invest_learn_bp)
+    app.register_blueprint(market_bp)
+from .market import market_bp
