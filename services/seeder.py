@@ -84,7 +84,7 @@ def _seed_demo_user():
     for badge_id in ['first_save', 'budget_master', 'streak_3']:
         db.session.add(UserAchievement(user_id=demo_user.id, badge_id=badge_id))
 
-    print("✅ Demo user seeded: username=demo, password=demo123")
+    print("Demo user seeded: username=demo, password=demo123")
 
 
 def _seed_leaderboard_users():
